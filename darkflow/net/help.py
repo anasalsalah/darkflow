@@ -64,16 +64,16 @@ def _get_fps(self, frame):
     return timer() - start
 
 def camera(self):
-    file = self.FLAGS.demo
-    SaveVideo = self.FLAGS.saveVideo
+    video_source = self.FLAGS.demo
+    save_video = self.FLAGS.saveVideo
 
-    if file == 'camera':
-        file = 0
+    if video_source == 'camera':
+        video_source = 0
     else:
-        assert os.path.isfile(file), \
-        'file {} does not exist'.format(file)
+        assert os.path.isfile(video_source), \
+        'file {} does not exist'.format(video_source)
 
-    camera = cv2.VideoCapture(file)
+    camera = cv2.VideoCapture(video_source)
 
     self.say('Press [ESC] to quit demo')
 
@@ -85,19 +85,25 @@ def camera(self):
     height, width, _ = frame.shape
     cv2.resizeWindow('', width, height)
 
-    if SaveVideo:
+    if self.FLAGS.json:  # delete the json file if it exists from a previous run
+        json_file = os.path.splitext(self.FLAGS.demo)[0] + ".json"
+        if os.path.isfile(json_file):
+            os.remove(json_file)  # delete the file if found
+
+    if save_video:
         # check opencv version and configure videoWriter accordingly
         print("Saving the video using opencv version: " + cv2.__version__)
         cv_is_v2 = cv2.__version__.startswith("2")
         fourcc = cv2.cv.CV_FOURCC(*'XVID') if cv_is_v2 else cv2.VideoWriter_fourcc(*'XVID')
-        if file == 0:  # camera window
+        if video_source == 0:  # camera window
           fps = 1 / self._get_fps(frame)
           if fps < 1:
             fps = 1
         else:
             fps = round(camera.get(cv2.cv.CV_CAP_PROP_FPS)) if cv_is_v2 else round(camera.get(cv2.CAP_PROP_FPS))
-        videoWriter = cv2.VideoWriter(
-            'video.avi', fourcc, fps, (width, height))
+
+        output_video_path = os.path.splitext(self.FLAGS.demo)[0] + "_yolo" + ".avi"
+        videoWriter = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
     # buffers for demo in batch
     buffer_inp = list()
@@ -122,9 +128,9 @@ def camera(self):
             feed_dict = {self.inp: buffer_pre}
             net_out = self.sess.run(self.out, feed_dict)
             for img, single_out in zip(buffer_inp, net_out):
-                postprocessed = self.framework.postprocess(
-                    single_out, img, False)
-                if SaveVideo:
+                # TODO: fix frame_number parameter below to be to take queue into consideration
+                postprocessed = self.framework.postprocess(single_out, img, False, elapsed)
+                if save_video:
                     videoWriter.write(postprocessed)
                 # draw image to opencv window
                 cv2.imshow('', postprocessed)
@@ -142,7 +148,7 @@ def camera(self):
         if choice == 27: break
 
     sys.stdout.write('\n')
-    if SaveVideo:
+    if save_video:
         videoWriter.release()
 
     camera.release()
