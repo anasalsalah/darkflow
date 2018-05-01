@@ -43,7 +43,18 @@ def labels(meta, FLAGS):
     if len(meta['labels']) == 0:
         meta['labels'] = labels20
 
-    print ("meta['labels'] is: " + meta['labels'].__str__())
+    # AAA: generate list of selected labels if existing
+    if FLAGS.selectedLabels != '':
+        print("FLAGS.selectedLabels is: " + FLAGS.selectedLabels)
+        meta['selected_labels'] = list()
+        select_file = FLAGS.selectedLabels
+        with open(select_file, 'r') as f:
+            meta['selected_labels'] = list()
+            sel_labs = [sl.strip() for sl in f.readlines()]
+            for sel_lab in sel_labs:
+                if sel_lab == '----': break
+                meta['selected_labels'] += [sel_lab]
+        print ("meta['selected_labels'] is: " + meta['selected_labels'].__str__())
 
 def is_inp(self, name): 
     return name.lower().endswith(('.jpg', '.jpeg', '.png'))

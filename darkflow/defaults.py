@@ -11,6 +11,8 @@ class argHandler(dict):
         self.define('config', './cfg/', 'path to .cfg directory')
         self.define('dataset', '../pascal/VOCdevkit/IMG/', 'path to dataset directory')
         self.define('labels', 'labels.txt', 'path to labels file')
+        # AAA: adding argument for selecting our own preferred labels
+        self.define('selectedLabels', '', 'path to selected labels file')
         self.define('backup', './ckpt/', 'path to backup folder')
         self.define('summary', '', 'path to TensorBoard summaries directory')
         self.define('annotation', '../pascal/VOCdevkit/ANN/', 'path to annotation directory')

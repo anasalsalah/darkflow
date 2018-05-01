@@ -85,13 +85,13 @@ def camera(self):
     height, width, _ = frame.shape
     cv2.resizeWindow('', width, height)
 
-    if self.FLAGS.json:  # delete the json file if it exists from a previous run
+    if self.FLAGS.json:  # AAA: delete the json file if it exists from a previous run
         json_file = os.path.splitext(self.FLAGS.demo)[0] + ".json"
         if os.path.isfile(json_file):
             os.remove(json_file)  # delete the file if found
 
     if save_video:
-        # check opencv version and configure videoWriter accordingly
+        # AAA: check opencv version and configure videoWriter accordingly
         print("Saving the video using opencv version: " + cv2.__version__)
         cv_is_v2 = cv2.__version__.startswith("2")
         fourcc = cv2.cv.CV_FOURCC(*'XVID') if cv_is_v2 else cv2.VideoWriter_fourcc(*'XVID')
@@ -128,7 +128,8 @@ def camera(self):
             feed_dict = {self.inp: buffer_pre}
             net_out = self.sess.run(self.out, feed_dict)
             for img, single_out in zip(buffer_inp, net_out):
-                # TODO: fix frame_number parameter below to be to take queue into consideration
+                # TODO: fix frame_number parameter below to account for queue size.
+                # AAA: For now it's just set to "elapsed", assuming queue is set to 1.
                 postprocessed = self.framework.postprocess(single_out, img, False, elapsed)
                 if save_video:
                     videoWriter.write(postprocessed)
