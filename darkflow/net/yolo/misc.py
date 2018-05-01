@@ -12,7 +12,7 @@ labels20 = ["aeroplane", "bicycle", "bird", "boat", "bottle",
 
 voc_models = ['yolo-full', 'yolo-tiny', 'yolo-small',  # <- v1
               'yolov1', 'tiny-yolov1', # <- v1.1 
-              'tiny-yolo-voc', 'yolo-voc'] # <- v2
+              'tiny-yolo-voc', 'yolo-voc', 'yolov2-tiny-voc'] # <- v2
 
 coco_models = ['tiny-coco', 'yolo-coco',  # <- v1.1
                'yolo', 'tiny-yolo'] # <- v2
@@ -20,9 +20,9 @@ coco_models = ['tiny-coco', 'yolo-coco',  # <- v1.1
 coco_names = 'coco.names'
 nine_names = '9k.names'
 
-def labels(meta, FLAGS):    
+def labels(meta, FLAGS):
     model = os.path.basename(meta['name'])
-    if model in voc_models: 
+    if model in voc_models:
         print("Model has a VOC model name, loading VOC labels.")
         meta['labels'] = labels20
     else:
@@ -33,14 +33,17 @@ def labels(meta, FLAGS):
         elif model == 'yolo9000':
             print("Model has name yolo9000, loading yolo9000 labels.")
             file = os.path.join(FLAGS.config, nine_names)
+        print("labels file is: " + file)
         with open(file, 'r') as f:
             meta['labels'] = list()
             labs = [l.strip() for l in f.readlines()]
             for lab in labs:
                 if lab == '----': break
                 meta['labels'] += [lab]
-    if len(meta['labels']) == 0: 
+    if len(meta['labels']) == 0:
         meta['labels'] = labels20
+
+    print ("meta['labels'] is: " + meta['labels'].__str__())
 
 def is_inp(self, name): 
     return name.lower().endswith(('.jpg', '.jpeg', '.png'))
