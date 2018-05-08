@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<script src="CanvasState.js"></script>
+<script src="Shape.js"></script>
+<script>
+
+var myCanvState;
+
+function init() {
+  myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
+  //myCanvState.addShape(new Shape(60,240,40,60, '#FF0000'));
+  //myCanvState.addShape(new Shape(60,140,40,60, 'lightskyblue'));
+  //myCanvState.addShape(new Shape(80,150,100,100, 'rgba(127, 255, 212, .5)','test rectangle'));
+
+  myCanvState.canvas.addEventListener('updateSelectedBox', function(e) {
+    if(myCanvState.selection)
+      document.getElementById("selectedBoxLabel").value = myCanvState.selection.label;
+    else
+      document.getElementById("selectedBoxLabel").value = "";
+  }, true);
+
+  drawBoxesFromJson(document.getElementById('jsonContents').textContent);
+}
+
+function handleImageFile() {
+ 
+  var selectedFile = document.getElementById('imageInput').files[0];
+  var imageContents = document.getElementById('imageContents');
+  var fileType = /.*image/;
+
+  if (selectedFile.type.match(fileType)) {
+     var reader = new FileReader();
+        reader.onload = function () {
+            imageContents.src = reader.result;
+	        myCanvState.valid = false;
+        }
+        reader.readAsDataURL(selectedFile);
+  } 
+  else {
+    alert("File not supported! Your file type is: " + selectedFile.type);
+  }
+}
+
+function handleJsonFile() {
+ 
+  var selectedFile = document.getElementById('jsonInput').files[0];
+  var jsonContents = document.getElementById('jsonContents');
+  var fileType = /.*json/;
+
+  if (selectedFile.type.match(fileType)) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      jsonContents.textContent = reader.result;
+      drawBoxesFromJson(reader.result);
+    }
+    reader.readAsText(selectedFile);
+  } 
+  else {
+    jsonContents.textContent = "File not supported! Your file type is: " + selectedFile.type;
+  }
+}
+
+function drawBoxesFromJson(jsonText) {
+
+  myCanvState.clearShapes();
+  var objects = JSON.parse(jsonText);
+  for (i=0; i<objects.length; i++) {
+	var label = objects[i].label;
+	var x = objects[i].topleft.x;
+	var y = objects[i].topleft.y;
+	var w = objects[i].bottomright.x - x;
+	var h = objects[i].bottomright.y - y;
+	myCanvState.addShape(new Shape(x, y, w, h, 'rgba(127, 255, 212, .5)', label));
+  }
+}
+
+function updateJsonFromCanvas(canvState) {
+  shapes = canvState.shapes;
+  var newJsonText = '[';
+  for (i=0; i<shapes.length; i++) {
+    var shape = shapes[i];
+    var bottomx = shape.x + shape.w;
+    var bottomy = shape.y + shape.h;
+    newJsonText += '{"topleft": {"x":' + shape.x + ', "y": ' + shape.y + '}, "label": "' + shape.label + '", "confidence": 1, "bottomright": {"x": ' + bottomx + ', "y": ' + bottomy + '}}';
+    if (i < shapes.length-1)
+      newJsonText += ',';
+    else
+      newJsonText += ']';
+  }
+  document.getElementById('jsonContents').textContent = newJsonText;
+}
+
+function updateSelectedBoxLabel() {
+  myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
+}
+
+function deleteSelectedBox() {
+  myCanvState.deleteSelectedBox();
+}
+</script>
+
+<html>
+<body onLoad='init()'>
+  <img id="imageContents" src="sample_person.jpg" style="display:none"><!--  -->
+  <p>Yolo Editor</p>
+  <table>
+  <tr>
+    <th>
+      <canvas id="theCanvas" width="800" height="600" style="border:3px solid #000000;"></canvas>
+    </th>
+    <th align="left">
+      Selected Box:
+      <br/>
+      <input type="text" style="width:200px;margin-bottom:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label"/>
+      <br/>
+      <input type="button" style="width:100px" id="updateBoxButton" name="updateBoxButton" value="Update Label" onclick="updateSelectedBoxLabel()"/>
+      <input type="button" style="width:100px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="deleteSelectedBox()"/>
+    </th>
+  </tr>
+  </table>
+  <br/>
+  Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFile()"/>
+  Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFile()"/>
+  <textarea id="jsonContents" readonly rows="5" cols="80">[{"topleft": {"x": 67, "y": 267}, "label": "cow", "confidence": 0.56, "bottomright": {"x": 185, "y": 354}}, {"topleft": {"x": 179, "y": 105}, "label": "person", "confidence": 0.67, "bottomright": {"x": 281, "y": 373}}, {"topleft": {"x": 424, "y": 145}, "label": "sheep", "confidence": 0.84, "bottomright": {"x": 592, "y": 336}}]</textarea>
+  <br/>
+
+</body>
+</html>
