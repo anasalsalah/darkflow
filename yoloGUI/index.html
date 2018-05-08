@@ -99,11 +99,36 @@ function deleteSelectedBox() {
 </script>
 
 <html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
 <body onLoad='init()'>
-  <img id="imageContents" src="sample_person.jpg" style="display:none"><!--  -->
+  <img id="imageContents" src="sample_person.jpg" style="display:none"><!-- style="display:none" -->
   <p>Yolo Editor</p>
   <table>
   <tr>
+    <th>
+      <table>
+        <tr><td>
+          <img src="sample_computer.jpg" class="thumb">
+        </td></tr>
+        <tr><td>
+          <img src="sample_dog.jpg" class="thumb">
+        </td></tr>
+        <tr><td>
+          <img src="sample_eagle.jpg" class="thumb">
+        </td></tr>
+        <tr><td>
+          <img src="sample_giraffe.jpg" class="thumb">
+        </td></tr>
+        <tr><td>
+          <img src="sample_horses.jpg" class="thumb">
+        </td></tr>
+        <tr><td>
+          <img src="sample_person.jpg" class="thumb">
+        </td></tr>
+      </table>
+    </th>
     <th>
       <canvas id="theCanvas" width="800" height="600" style="border:3px solid #000000;"></canvas>
     </th>
@@ -120,6 +145,8 @@ function deleteSelectedBox() {
   <br/>
   Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFile()"/>
   Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFile()"/>
+  <br/>
+  <br/>
   <textarea id="jsonContents" readonly rows="5" cols="80">[{"topleft": {"x": 67, "y": 267}, "label": "cow", "confidence": 0.56, "bottomright": {"x": 185, "y": 354}}, {"topleft": {"x": 179, "y": 105}, "label": "person", "confidence": 0.67, "bottomright": {"x": 281, "y": 373}}, {"topleft": {"x": 424, "y": 145}, "label": "sheep", "confidence": 0.84, "bottomright": {"x": 592, "y": 336}}]</textarea>
   <br/>
 
