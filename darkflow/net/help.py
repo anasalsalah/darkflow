@@ -80,7 +80,7 @@ def camera(self):
     assert camera.isOpened(), \
     'Cannot capture source'
 
-    cv2.namedWindow('', 0)
+    cv2.namedWindow('yolo', 0)
     _, frame = camera.read()
     height, width, _ = frame.shape
     cv2.resizeWindow('', width, height)

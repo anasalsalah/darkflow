@@ -31,6 +31,7 @@ def postprocess(self, net_out, im, save_image=True, video_frame_num=0):
     """
 	Takes net output, draw net_out, save to disk
 	"""
+
     boxes = self.findboxes(net_out)
 
     # meta
@@ -68,13 +69,12 @@ def postprocess(self, net_out, im, save_image=True, video_frame_num=0):
         cv2.putText(imgcv, mess, (left, top - 12),
                     0, 1e-3 * h, colors[max_indx], thick // 3)
 
+    out_folder = self.FLAGS.imgdir  # os.path.join(self.FLAGS.imgdir, 'out')
+    img_name = os.path.join(out_folder, os.path.basename(im))
     # AAA: check if this is a single image, then check if save image
     if video_frame_num == 0:  # saving image file
-        out_folder = os.path.join(self.FLAGS.imgdir, 'out')
-        img_name = os.path.join(out_folder, os.path.basename(im))
         if save_image:
             cv2.imwrite(img_name, imgcv)
-
     # AAA: save json file for image, or append info for video's json file
     if self.FLAGS.json:
         json_text = json.dumps(resultsForJSON)

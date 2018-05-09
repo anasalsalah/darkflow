@@ -13,7 +13,7 @@ def cliHandler(args):
             this = os.path.abspath(os.path.join(os.path.curdir, d))
             if not os.path.exists(this): os.makedirs(this)
     
-    requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup, os.path.join(FLAGS.imgdir,'out')]
+    requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup]  # os.path.join(FLAGS.imgdir,'out')
     if FLAGS.summary:
         requiredDirectories.append(FLAGS.summary)
 

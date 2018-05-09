@@ -12,7 +12,8 @@ class argHandler(dict):
         self.define('dataset', '../pascal/VOCdevkit/IMG/', 'path to dataset directory')
         self.define('labels', 'labels.txt', 'path to labels file')
         # AAA: adding argument for selecting our own preferred labels
-        self.define('selectedLabels', '', 'path to selected labels file')
+        self.define('selectedLabels', '', 'path to selected labels file '
+                                          '(choose which labels will be outputted and ignore the rest)')
         self.define('backup', './ckpt/', 'path to backup folder')
         self.define('summary', '', 'path to TensorBoard summaries directory')
         self.define('annotation', '../pascal/VOCdevkit/ANN/', 'path to annotation directory')
@@ -33,8 +34,9 @@ class argHandler(dict):
         self.define('save', 2000, 'save checkpoint every ? training examples')
         self.define('demo', '', 'demo on webcam')
         self.define('queue', 1, 'process demo in batch')
+        self.define('saveVideo', False, 'Outputs video with bounding boxes drawn over (requires video or camera input)')
+        self.define('saveImages', False, 'Outputs images with bounding boxes drawn over (requires images input)')
         self.define('json', False, 'Outputs bounding box information in json format.')
-        self.define('saveVideo', False, 'Records video from input video or camera')
         self.define('pbLoad', '', 'path to .pb protobuf file (metaLoad must also be specified)')
         self.define('metaLoad', '', 'path to .meta file generated during --savepb that corresponds to .pb file')
 

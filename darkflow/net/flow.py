@@ -105,6 +105,7 @@ import math
 
 def predict(self):
     inp_path = self.FLAGS.imgdir
+    save_img = self.FLAGS.saveImages
     all_inps = os.listdir(inp_path)
     all_inps = [i for i in all_inps if self.framework.is_inp(i)]
     if not all_inps:
@@ -139,8 +140,8 @@ def predict(self):
         start = time.time()
         pool.map(lambda p: (lambda i, prediction:
             self.framework.postprocess(
-               prediction, os.path.join(inp_path, this_batch[i])))(*p),
-            enumerate(out))
+                prediction, os.path.join(inp_path, this_batch[i]), save_img))(*p),
+                enumerate(out))
         stop = time.time(); last = stop - start
 
         # Timing

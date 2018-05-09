@@ -81,7 +81,7 @@ def preprocess(self, im, allobj=None):
     return im  # , np.array(im) # for unit testing
 
 
-def postprocess(self, net_out, im, save=True):
+def postprocess(self, net_out, im, save_image=True):
     """
 	Takes net output, draw predictions, save to disk
 	"""
@@ -118,16 +118,16 @@ def postprocess(self, net_out, im, save=True):
             0, 1e-3 * h, self.meta['colors'][max_indx],
                thick // 3)
 
-    if not save:
-        return imgcv
-
-    outfolder = os.path.join(self.FLAGS.imgdir, 'out')
+    outfolder = self.FLAGS.imgdir  # os.path.join(self.FLAGS.imgdir, 'out')
     img_name = os.path.join(outfolder, os.path.basename(im))
+
     if self.FLAGS.json:
         textJSON = json.dumps(resultsForJSON)
         textFile = os.path.splitext(img_name)[0] + ".json"
         with open(textFile, 'w') as f:
             f.write(textJSON)
-        return
 
-    cv2.imwrite(img_name, imgcv)
+    if save_image:
+       cv2.imwrite(img_name, imgcv)
+
+    return imgcv
