@@ -10,12 +10,14 @@ import os
 
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
+
 def build_train_op(self):
     self.framework.loss(self.out)
     self.say('Building {} train op'.format(self.meta['model']))
     optimizer = self._TRAINER[self.FLAGS.trainer](self.FLAGS.lr)
     gradients = optimizer.compute_gradients(self.framework.loss)
     self.train_op = optimizer.apply_gradients(gradients)
+
 
 def load_from_ckpt(self):
     if self.FLAGS.load < 0: # load lastest ckpt
@@ -70,15 +72,13 @@ def camera(self):
     if video_source == 'camera':
         video_source = 0
     else:
-        assert os.path.isfile(video_source), \
-        'file {} does not exist'.format(video_source)
+        assert os.path.isfile(video_source), 'file {} does not exist'.format(video_source)
 
     camera = cv2.VideoCapture(video_source)
 
     self.say('Press [ESC] to quit demo')
 
-    assert camera.isOpened(), \
-    'Cannot capture source'
+    assert camera.isOpened(), 'Cannot capture source'
 
     cv2.namedWindow('yolo', 0)
     _, frame = camera.read()
@@ -154,6 +154,7 @@ def camera(self):
 
     camera.release()
     cv2.destroyAllWindows()
+
 
 def to_darknet(self):
     darknet_ckpt = self.darknet
