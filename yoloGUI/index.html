@@ -6,6 +6,7 @@
 var myCanvState;
 
 function init() {
+
   myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
   //myCanvState.addShape(new Shape(60,240,40,60, '#FF0000'));
   //myCanvState.addShape(new Shape(60,140,40,60, 'lightskyblue'));
@@ -21,6 +22,15 @@ function init() {
   drawBoxesFromJson(document.getElementById('jsonContents').textContent);
 }
 
+function selectThumbnailImage(index) {
+
+  var imgThumbId = 'thumbImg' + index
+  var imageContents = document.getElementById(imgThumbId);
+  var imageFile = imageContents.src;
+  document.getElementById('imageContents').src = imageFile;
+  myCanvState.refreshCanvas();
+}
+
 function handleImageFile() {
  
   var selectedFile = document.getElementById('imageInput').files[0];
@@ -31,7 +41,7 @@ function handleImageFile() {
      var reader = new FileReader();
         reader.onload = function () {
             imageContents.src = reader.result;
-	        myCanvState.valid = false;
+	        myCanvState.refreshCanvas();
         }
         reader.readAsDataURL(selectedFile);
   } 
@@ -74,6 +84,7 @@ function drawBoxesFromJson(jsonText) {
 }
 
 function updateJsonFromCanvas(canvState) {
+
   shapes = canvState.shapes;
   var newJsonText = '[';
   for (i=0; i<shapes.length; i++) {
@@ -83,18 +94,31 @@ function updateJsonFromCanvas(canvState) {
     newJsonText += '{"topleft": {"x":' + shape.x + ', "y": ' + shape.y + '}, "label": "' + shape.label + '", "confidence": 1, "bottomright": {"x": ' + bottomx + ', "y": ' + bottomy + '}}';
     if (i < shapes.length-1)
       newJsonText += ',';
-    else
-      newJsonText += ']';
   }
+  newJsonText += ']';
   document.getElementById('jsonContents').textContent = newJsonText;
 }
 
-function updateSelectedBoxLabel() {
+function buttonUpdateSelectedBoxLabel() {
+
   myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
 }
 
+function keyboardUpdateSelectedBoxLabel(e) {
+
+  if (event.keyCode === 13)
+    myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
+}
+
 function deleteSelectedBox() {
+
   myCanvState.deleteSelectedBox();
+}
+
+function keyboardDeleteSelectedBox() {
+
+  if (event.keyCode === 46)
+    myCanvState.deleteSelectedBox();
 }
 </script>
 
@@ -103,43 +127,36 @@ function deleteSelectedBox() {
   <link rel="stylesheet" href="styles.css">
 </head>
 <body onLoad='init()'>
-  <img id="imageContents" src="samples/sample_person.jpg" style="display:none"><!-- style="display:none" -->
+  <img id="imageContents" src="samples/sample_person.jpg" style="display:none">
   <p>Yolo Editor</p>
   <table>
   <tr>
-    <th>
-      <table>
-        <tr><td>
-          <img src="samples/sample_computer.jpg" class="thumb">
-        </td></tr>
-        <tr><td>
-          <img src="samples/sample_dog.jpg" class="thumb">
-        </td></tr>
-        <tr><td>
-          <img src="samples/sample_eagle.jpg" class="thumb">
-        </td></tr>
-        <tr><td>
-          <img src="samples/sample_giraffe.jpg" class="thumb">
-        </td></tr>
-        <tr><td>
-          <img src="samples/sample_horses.jpg" class="thumb">
-        </td></tr>
-        <tr><td>
-          <img src="samples/sample_person.jpg" class="thumb">
-        </td></tr>
-      </table>
-    </th>
-    <th>
-      <canvas id="theCanvas" width="800" height="600" style="border:3px solid #000000;"></canvas>
-    </th>
-    <th align="left">
+    <td valign="top">
+      <div class="imageScroller">
+        <img src="samples/sample_computer.jpg" class="thumb" id="thumbImg0" onclick="selectThumbnailImage(0)">
+        <br/>
+        <img src="samples/sample_dog.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage(1)">
+        <br/>
+        <img src="samples/sample_eagle.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage(2)">
+        <br/>
+        <img src="samples/sample_giraffe.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage(3)">
+        <br/>
+        <img src="samples/sample_horses.jpg" class="thumb" id="thumbImg4" onclick="selectThumbnailImage(4)">
+        <br/>
+        <img src="samples/sample_person.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage(5)">
+      </div>
+    </td>
+    <td>
+      <canvas id="theCanvas" width="800" height="600" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
+    </td>
+    <td align="left">
       Selected Box:
       <br/>
-      <input type="text" style="width:200px;margin-bottom:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label"/>
+      <input type="text" style="width:200px;margin-bottom:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label" onkeyup="keyboardUpdateSelectedBoxLabel(this)" placeholder="Press Enter to Save"/>
       <br/>
-      <input type="button" style="width:100px" id="updateBoxButton" name="updateBoxButton" value="Update Label" onclick="updateSelectedBoxLabel()"/>
+      <input type="button" style="width:100px" id="updateBoxButton" name="updateBoxButton" value="Save Label" onclick="buttonUpdateSelectedBoxLabel()"/>
       <input type="button" style="width:100px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="deleteSelectedBox()"/>
-    </th>
+    </td>
   </tr>
   </table>
   <br/>

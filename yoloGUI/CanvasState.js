@@ -7,7 +7,6 @@
 
 function CanvasState(canvas, bgImg) {
   // **** First some setup! ****
-
   this.canvas = canvas;
   this.bgImg = bgImg;
   this.width = canvas.width;
@@ -63,6 +62,7 @@ function CanvasState(canvas, bgImg) {
 
     // give priority to resizing. loop over all shapes to check for corners
     for (var i = shapes.length-1; i >= 0; i--) {
+
       resizeCorner = shapes[i].inCorner(mx, my);
       if (resizeCorner != "") {
         var mySel = shapes[i];
@@ -71,13 +71,13 @@ function CanvasState(canvas, bgImg) {
         myState.dragging = false;
         myState.selection = mySel;
         myState.valid = false;
-
         myState.canvas.dispatchEvent(event);
         return;
       }
     }
     // if user is not resizing, loop over shapes to check if dragging
     for (var i = shapes.length-1; i >= 0; i--) {
+
       if (shapes[i].contains(mx, my)) {
         var mySel = shapes[i];
         // Keep track of where in the object we clicked
@@ -89,7 +89,6 @@ function CanvasState(canvas, bgImg) {
         myState.resizeCorner = "";
         myState.selection = mySel;
         myState.valid = false;
-
         myState.canvas.dispatchEvent(event);
         return;
       }
@@ -102,7 +101,6 @@ function CanvasState(canvas, bgImg) {
       myState.resizeCorner = "";
       myState.selection = null;
       myState.valid = false; // Need to clear the old selection border
-
       myState.canvas.dispatchEvent(event);
     }
   }, true);
@@ -110,6 +108,7 @@ function CanvasState(canvas, bgImg) {
   canvas.addEventListener('mousemove', function(e) {
 
     if (myState.resizing) {
+
       var mouse = myState.getMouse(e);
       var selection = myState.selection;
       var resizeCorner = myState.resizeCorner;
@@ -148,6 +147,7 @@ function CanvasState(canvas, bgImg) {
       myState.valid = false; // Something's resizing so we must redraw
     }
     if (myState.dragging) {
+
       var mouse = myState.getMouse(e);
       // We don't want to drag the object by its top-left corner, we want to drag it
       // from where we clicked. Thats why we saved the offset and use it here
@@ -158,6 +158,7 @@ function CanvasState(canvas, bgImg) {
   }, true);
 
   canvas.addEventListener('mouseup', function(e) {
+
     myState.dragging = false;
     myState.resizing = false;
     myState.resizeCorner = "";
@@ -165,6 +166,7 @@ function CanvasState(canvas, bgImg) {
 
   // double click for making new shapes
   canvas.addEventListener('dblclick', function(e) {
+
     var mouse = myState.getMouse(e);
     myState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 20, 20, 'rgba(0,255,0,.6)', 'new'));
   }, true);
@@ -177,17 +179,20 @@ function CanvasState(canvas, bgImg) {
 }
 
 CanvasState.prototype.addShape = function(shape) {
+
   this.shapes.push(shape);
   this.valid = false;
 }
 
 CanvasState.prototype.clearShapes = function() {
+
   this.shapes = [];
   this.selection = null;
   this.valid = false;
 }
 
 CanvasState.prototype.clearCanvas = function() {
+
   this.ctx.clearRect(0, 0, this.width, this.height);
 }
 
@@ -196,6 +201,7 @@ CanvasState.prototype.clearCanvas = function() {
 CanvasState.prototype.draw = function() {
   // if our state is invalid, redraw and validate!
   if (!this.valid) {
+
     var ctx = this.ctx;
     var shapes = this.shapes;
     this.clearCanvas();
@@ -206,6 +212,7 @@ CanvasState.prototype.draw = function() {
     // draw all shapes
     var l = shapes.length;
     for (var i = 0; i < l; i++) {
+
       var shape = shapes[i];
       // We can skip the drawing of elements that have moved off the screen:
       //TODO: Limit shapes to fall within canvas. Do not allow moving off screen.
@@ -217,6 +224,7 @@ CanvasState.prototype.draw = function() {
     // draw selection
     // right now this is just a stroke along the edge of the selected Shape
     if (this.selection != null) {
+
       ctx.strokeStyle = this.selectionColor;
       ctx.lineWidth = this.selectionWidth;
       var mySel = this.selection;
@@ -249,6 +257,7 @@ CanvasState.prototype.draw = function() {
 // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
 // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
 CanvasState.prototype.getMouse = function(e) {
+
   var element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
 
   // Compute the total offset
@@ -279,9 +288,17 @@ CanvasState.prototype.drawImage = function() {
   this.ctx.drawImage(img,0,0);
 }
 
+CanvasState.prototype.refreshCanvas = function() {
+
+  this.valid = false;
+}
+
 CanvasState.prototype.deleteSelectedBox = function() {
+
   for (i=0; i< this.shapes.length; i++) {
+
      if (this.shapes[i] == this.selection) {
+
     	this.shapes.splice(i,1);
         this.selection = null;
         this.canvas.dispatchEvent(new Event('updateSelectedBox'));
@@ -292,6 +309,7 @@ CanvasState.prototype.deleteSelectedBox = function() {
 }
 
 CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
+
   this.selection.label = newLabel;
   this.canvas.dispatchEvent(new Event('updateSelectedBox'));
   this.valid = false;

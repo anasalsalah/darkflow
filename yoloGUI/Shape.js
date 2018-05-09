@@ -14,6 +14,7 @@ function Shape(x, y, w, h, fill, label) {
 
 // Draws this shape to a given context
 Shape.prototype.drawBox = function(ctx) {
+
   ctx.fillStyle = this.fill;
   ctx.fillRect(this.x, this.y, this.w, this.h);
   ctx.font = "12px Arial";
