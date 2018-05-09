@@ -30,6 +30,7 @@ function CanvasState(canvas, bgImg) {
   // **** Keep track of state! ****
 
   this.valid = false; // when set to false, the canvas will redraw everything
+  // this.isDispatchUpdateCanvasEvent = true; // used to control dispatching ////////////////////////////////////////
   this.shapes = [];  // the collection of things to be drawn
   this.dragging = false; // keep track of when we are dragging
   this.resizing = false; // keep track of when we are resizing
@@ -70,7 +71,7 @@ function CanvasState(canvas, bgImg) {
         myState.resizeCorner = resizeCorner;
         myState.dragging = false;
         myState.selection = mySel;
-        myState.valid = false;
+        myState.refreshCanvas();
         myState.canvas.dispatchEvent(event);
         return;
       }
@@ -88,7 +89,7 @@ function CanvasState(canvas, bgImg) {
         myState.resizing = false;
         myState.resizeCorner = "";
         myState.selection = mySel;
-        myState.valid = false;
+        myState.refreshCanvas();
         myState.canvas.dispatchEvent(event);
         return;
       }
@@ -100,7 +101,7 @@ function CanvasState(canvas, bgImg) {
       myState.resizing = false;
       myState.resizeCorner = "";
       myState.selection = null;
-      myState.valid = false; // Need to clear the old selection border
+      myState.refreshCanvas(); // Need to clear the old selection border
       myState.canvas.dispatchEvent(event);
     }
   }, true);
@@ -144,7 +145,7 @@ function CanvasState(canvas, bgImg) {
       selection.y = newY;
       selection.w = newW;
       selection.h = newH;
-      myState.valid = false; // Something's resizing so we must redraw
+      myState.refreshCanvas(); // Something's resizing so we must redraw
     }
     if (myState.dragging) {
 
@@ -153,7 +154,7 @@ function CanvasState(canvas, bgImg) {
       // from where we clicked. Thats why we saved the offset and use it here
       myState.selection.x = mouse.x - myState.dragoffx;
       myState.selection.y = mouse.y - myState.dragoffy;
-      myState.valid = false; // Something's dragging so we must redraw
+      myState.refreshCanvas(); // Something's dragging so we must redraw
     }
   }, true);
 
@@ -168,7 +169,7 @@ function CanvasState(canvas, bgImg) {
   canvas.addEventListener('dblclick', function(e) {
 
     var mouse = myState.getMouse(e);
-    myState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 20, 20, 'rgba(0,255,0,.6)', 'new'));
+    myState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 50, 50, 'rgba(0,255,0,.6)', 'New'));
   }, true);
 
   // **** Options! ****
@@ -181,14 +182,14 @@ function CanvasState(canvas, bgImg) {
 CanvasState.prototype.addShape = function(shape) {
 
   this.shapes.push(shape);
-  this.valid = false;
+  this.refreshCanvas();
 }
 
 CanvasState.prototype.clearShapes = function() {
 
   this.shapes = [];
   this.selection = null;
-  this.valid = false;
+  this.refreshCanvas();
 }
 
 CanvasState.prototype.clearCanvas = function() {
@@ -248,8 +249,6 @@ CanvasState.prototype.draw = function() {
     }
 
     // ** Add stuff you want drawn on top all the time here **
-
-    updateJsonFromCanvas(this);
     this.valid = true;
   }
 }
@@ -288,9 +287,14 @@ CanvasState.prototype.drawImage = function() {
   this.ctx.drawImage(img,0,0);
 }
 
+CanvasState.prototype.setDispatchUpdateCanvasEvent = function(isDispatch) {
+
+}
+
 CanvasState.prototype.refreshCanvas = function() {
 
   this.valid = false;
+  this.canvas.dispatchEvent(new Event('updateCanvas'));
 }
 
 CanvasState.prototype.deleteSelectedBox = function() {
@@ -302,7 +306,7 @@ CanvasState.prototype.deleteSelectedBox = function() {
     	this.shapes.splice(i,1);
         this.selection = null;
         this.canvas.dispatchEvent(new Event('updateSelectedBox'));
-        this.valid = false;
+        this.refreshCanvas();
         break;
      }
   }
@@ -312,5 +316,5 @@ CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
 
   this.selection.label = newLabel;
   this.canvas.dispatchEvent(new Event('updateSelectedBox'));
-  this.valid = false;
+  this.refreshCanvas();
 }

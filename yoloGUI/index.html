@@ -8,9 +8,6 @@ var myCanvState;
 function init() {
 
   myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
-  //myCanvState.addShape(new Shape(60,240,40,60, '#FF0000'));
-  //myCanvState.addShape(new Shape(60,140,40,60, 'lightskyblue'));
-  //myCanvState.addShape(new Shape(80,150,100,100, 'rgba(127, 255, 212, .5)','test rectangle'));
 
   myCanvState.canvas.addEventListener('updateSelectedBox', function(e) {
     if(myCanvState.selection)
@@ -18,6 +15,8 @@ function init() {
     else
       document.getElementById("selectedBoxLabel").value = "";
   }, true);
+
+  myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
 
   drawBoxesFromJson(document.getElementById('jsonContents').textContent);
 }
@@ -72,31 +71,83 @@ function handleJsonFile() {
 function drawBoxesFromJson(jsonText) {
 
   myCanvState.clearShapes();
-  var objects = JSON.parse(jsonText);
-  for (i=0; i<objects.length; i++) {
-	var label = objects[i].label;
-	var x = objects[i].topleft.x;
-	var y = objects[i].topleft.y;
-	var w = objects[i].bottomright.x - x;
-	var h = objects[i].bottomright.y - y;
-	myCanvState.addShape(new Shape(x, y, w, h, 'rgba(127, 255, 212, .5)', label));
+  try {
+
+    var image = JSON.parse(jsonText).image;
+    var boxes = image.boxes;
+
+    if(boxes.length > 0) {
+      // disable listening to canvas changes while we are using the json content to update the canvas
+      myCanvState.canvas.removeEventListener('updateCanvas', updateJsonFromCanvas, true);
+
+      // the resolution of the actual image stored on the server
+      var trueW = image.width;
+      var trueH = image.height;
+      // the resolution of the image displayed in the browser
+      var workW = myCanvState.bgImg.width;
+      var workH = myCanvState.bgImg.height;
+      // the ratio of size between the two images (opposite to updateJsonFromCanvas)
+      var wRatio = workW / trueW;
+      var hRatio = workH / trueH;
+
+      for (i=0; i<boxes.length; i++) {
+        var label = boxes[i].label;
+        var x = Math.round(boxes[i].topleft.x * wRatio);
+        var y = Math.round(boxes[i].topleft.y * hRatio);
+        var w = Math.round(boxes[i].bottomright.x * wRatio - x);
+        var h = Math.round(boxes[i].bottomright.y * hRatio - y);
+
+        myCanvState.addShape(new Shape(x, y, w, h, 'rgba(127, 255, 212, .5)', label));
+      }
+      // re-enable listening to canvas changes
+      myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
+    }
+  }
+  catch (err){
+    alert ("An error occurred while trying to draw boxes based on the json file: " + err.message);
   }
 }
 
-function updateJsonFromCanvas(canvState) {
+function updateJsonFromCanvas() {
 
-  shapes = canvState.shapes;
-  var newJsonText = '[';
-  for (i=0; i<shapes.length; i++) {
-    var shape = shapes[i];
-    var bottomx = shape.x + shape.w;
-    var bottomy = shape.y + shape.h;
-    newJsonText += '{"topleft": {"x":' + shape.x + ', "y": ' + shape.y + '}, "label": "' + shape.label + '", "confidence": 1, "bottomright": {"x": ' + bottomx + ', "y": ' + bottomy + '}}';
-    if (i < shapes.length-1)
-      newJsonText += ',';
+  if (myCanvState.shapes && myCanvState.shapes.length > 0) {
+    // get the current json data
+    var data = JSON.parse(document.getElementById('jsonContents').textContent);
+    var image = data.image
+    var shapes = myCanvState.shapes;
+    image.boxes = [];
+
+    // the resolution of the actual image stored on the server
+    var trueW = image.width;
+    var trueH = image.height;
+    // the resolution of the image displayed in the browser
+    var workW = myCanvState.bgImg.width;
+    var workH = myCanvState.bgImg.height;
+    // the ratio of size between the two images (opposite to drawBoxesFromJson)
+    var wRatio = trueW / workW;
+    var hRatio = trueH / workH;
+
+    // fill in the new shapes in the json data
+    for (i=0; i<shapes.length; i++) {
+
+      var shape = shapes[i];
+      var topx = Math.round(shape.x * wRatio);
+      var topy = Math.round(shape.y * hRatio);
+      var bottomx = Math.round((shape.x + shape.w) * wRatio);
+      var bottomy = Math.round((shape.y + shape.h) * hRatio);
+
+      image.boxes[i] = {};
+      image.boxes[i].topleft = {}
+      image.boxes[i].topleft.x = topx;
+      image.boxes[i].topleft.y = topy;
+      image.boxes[i].label = shape.label;
+      image.boxes[i].confidence = 1;
+      image.boxes[i].bottomright = {}
+      image.boxes[i].bottomright.x = bottomx;
+      image.boxes[i].bottomright.y = bottomy;
+    }
+    document.getElementById('jsonContents').textContent = JSON.stringify(data);
   }
-  newJsonText += ']';
-  document.getElementById('jsonContents').textContent = newJsonText;
 }
 
 function buttonUpdateSelectedBoxLabel() {
@@ -110,7 +161,7 @@ function keyboardUpdateSelectedBoxLabel(e) {
     myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
 }
 
-function deleteSelectedBox() {
+function buttonDeleteSelectedBox() {
 
   myCanvState.deleteSelectedBox();
 }
@@ -119,6 +170,10 @@ function keyboardDeleteSelectedBox() {
 
   if (event.keyCode === 46)
     myCanvState.deleteSelectedBox();
+}
+
+function buttonNewBox() {
+  myCanvState.addShape(new Shape(50, 50, 50, 50, 'rgba(0,255,0,.6)', 'New'));
 }
 
 function displayInfoPopup() {
@@ -132,23 +187,23 @@ function displayInfoPopup() {
   <link rel="stylesheet" href="styles.css">
 </head>
 <body onLoad='init()'>
-  <img id="imageContents" src="samples/sample_person.jpg" style="display:none">
+  <img id="imageContents" src="samples/counter_work.jpg" style="display:none">
   <h1>Yolo Editor</h1>
   <table>
   <tr>
     <td valign="top">
       <div class="imageScroller">
-        <img src="samples/sample_computer.jpg" class="thumb" id="thumbImg0" onclick="selectThumbnailImage(0)">
+        <img src="samples/counter_work.jpg" class="thumb" id="thumbImg0" onclick="selectThumbnailImage(0)">
         <br/>
-        <img src="samples/sample_dog.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage(1)">
+        <img src="samples/thief2_work.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage(1)">
         <br/>
-        <img src="samples/sample_office.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage(2)">
+        <img src="samples/sample_office_work.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage(2)">
         <br/>
-        <img src="samples/sample_giraffe.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage(3)">
+        <img src="samples/sample_dog_work.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage(3)">
         <br/>
         <img src="samples/sample_horses.jpg" class="thumb" id="thumbImg4" onclick="selectThumbnailImage(4)">
         <br/>
-        <img src="samples/sample_person.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage(5)">
+        <img src="samples/sample_person_work.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage(5)">
       </div>
     </td>
     <td valign="top">
@@ -172,16 +227,21 @@ function displayInfoPopup() {
         Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFile()"/>
         <br/>
         <br/>
-        <textarea id="jsonContents" readonly rows="5" cols="75">[{"topleft": {"x": 67, "y": 267}, "label": "cow", "confidence": 0.56, "bottomright": {"x": 185, "y": 354}}, {"topleft": {"x": 179, "y": 105}, "label": "person", "confidence": 0.67, "bottomright": {"x": 281, "y": 373}}, {"topleft": {"x": 424, "y": 145}, "label": "sheep", "confidence": 0.84, "bottomright": {"x": 592, "y": 336}}]</textarea>
+        <textarea id="jsonContents" readonly rows="5" cols="75">{"image": {
+"width": 1920,
+"height": 1080,
+"status": "New",
+"boxes":[{"confidence": 0.4, "label": "person", "bottomright": {"x": 981, "y": 1079}, "topleft": {"x": 40, "y": 0}}]
+}}</textarea>
         <br/>
     </td>
     <td align="left">
-      Selected Box:
+      <input type="button" style="width:117px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>
+      <br/>Selected Box:
+      <input type="text" style="width:140px;margin-bottom:5px;margin-top:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label" onkeyup="keyboardUpdateSelectedBoxLabel(this)" placeholder="Press Enter to Save"/>
       <br/>
-      <input type="text" style="width:200px;margin-bottom:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label" onkeyup="keyboardUpdateSelectedBoxLabel(this)" placeholder="Press Enter to Save"/>
-      <br/>
-      <input type="button" style="width:100px" id="updateBoxButton" name="updateBoxButton" value="Save Label" onclick="buttonUpdateSelectedBoxLabel()"/>
-      <input type="button" style="width:100px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="deleteSelectedBox()"/>
+      <input type="button" style="width:117px" id="updateBoxButton" name="updateBoxButton" value="Save Label" onclick="buttonUpdateSelectedBoxLabel()"/>
+      <input type="button" style="width:117px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
       <br/>
     </td>
   </tr>
