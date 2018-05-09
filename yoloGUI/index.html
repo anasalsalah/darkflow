@@ -120,6 +120,11 @@ function keyboardDeleteSelectedBox() {
   if (event.keyCode === 46)
     myCanvState.deleteSelectedBox();
 }
+
+function displayInfoPopup() {
+  var popup = document.getElementById("infoPopup");
+  popup.classList.toggle("show");
+}
 </script>
 
 <html>
@@ -128,8 +133,7 @@ function keyboardDeleteSelectedBox() {
 </head>
 <body onLoad='init()'>
   <img id="imageContents" src="samples/sample_person.jpg" style="display:none">
-  <p>Yolo Editor</p>
-  <p>Double-click anywhere in the image to create a new box.<br/>You can press the Delete key on your keyboard to delete a selected box.</p>
+  <h1>Yolo Editor</h1>
   <table>
   <tr>
     <td valign="top">
@@ -138,7 +142,7 @@ function keyboardDeleteSelectedBox() {
         <br/>
         <img src="samples/sample_dog.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage(1)">
         <br/>
-        <img src="samples/sample_eagle.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage(2)">
+        <img src="samples/sample_office.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage(2)">
         <br/>
         <img src="samples/sample_giraffe.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage(3)">
         <br/>
@@ -147,8 +151,29 @@ function keyboardDeleteSelectedBox() {
         <img src="samples/sample_person.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage(5)">
       </div>
     </td>
-    <td>
+    <td valign="top">
       <canvas id="theCanvas" width="800" height="600" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
+      <br/>
+      <div class="popup" onclick="displayInfoPopup()">
+        <img src="resources/info_icon.png" width="20" height="20"/>
+        <span class="popuptext" id="infoPopup">
+          Select images from the scroller.<br/>
+          Click a box to select it, then drag, resize<br/>
+          relabel, or delete it.<br/>
+          <br/>
+          Shortcuts:<br/>
+          Double-click in image to create new box.<br/>
+          Delete key: deletes a selected box.<br/>
+          Enter key: saves a modified label.
+        </span>
+      </div>
+        <br/>
+        Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFile()"/>
+        Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFile()"/>
+        <br/>
+        <br/>
+        <textarea id="jsonContents" readonly rows="5" cols="75">[{"topleft": {"x": 67, "y": 267}, "label": "cow", "confidence": 0.56, "bottomright": {"x": 185, "y": 354}}, {"topleft": {"x": 179, "y": 105}, "label": "person", "confidence": 0.67, "bottomright": {"x": 281, "y": 373}}, {"topleft": {"x": 424, "y": 145}, "label": "sheep", "confidence": 0.84, "bottomright": {"x": 592, "y": 336}}]</textarea>
+        <br/>
     </td>
     <td align="left">
       Selected Box:
@@ -161,13 +186,5 @@ function keyboardDeleteSelectedBox() {
     </td>
   </tr>
   </table>
-  <br/>
-  Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFile()"/>
-  Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFile()"/>
-  <br/>
-  <br/>
-  <textarea id="jsonContents" readonly rows="5" cols="80">[{"topleft": {"x": 67, "y": 267}, "label": "cow", "confidence": 0.56, "bottomright": {"x": 185, "y": 354}}, {"topleft": {"x": 179, "y": 105}, "label": "person", "confidence": 0.67, "bottomright": {"x": 281, "y": 373}}, {"topleft": {"x": 424, "y": 145}, "label": "sheep", "confidence": 0.84, "bottomright": {"x": 592, "y": 336}}]</textarea>
-  <br/>
-
 </body>
 </html>

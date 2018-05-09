@@ -15,3 +15,31 @@ div.imageScroller {
     height: 600px;
     overflow-y: scroll;
 }
+
+/* Popup container - can be anything you want */
+.popup {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* The actual popup */
+.popup .popuptext {
+    visibility: hidden;
+    width: 270px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px 8px 8px 8px;
+    position: absolute;
+    z-index: 1;
+    /*bottom: 125%;
+    left: 50%;
+    margin-left: -60px;*/
+}
+
+/* Toggle this class - hide and show the popup */
+.popup .show {
+    visibility: visible;
+}
