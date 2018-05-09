@@ -129,6 +129,7 @@ function keyboardDeleteSelectedBox() {
 <body onLoad='init()'>
   <img id="imageContents" src="samples/sample_person.jpg" style="display:none">
   <p>Yolo Editor</p>
+  <p>Double-click anywhere in the image to create a new box.<br/>You can press the Delete key on your keyboard to delete a selected box.</p>
   <table>
   <tr>
     <td valign="top">
@@ -156,6 +157,7 @@ function keyboardDeleteSelectedBox() {
       <br/>
       <input type="button" style="width:100px" id="updateBoxButton" name="updateBoxButton" value="Save Label" onclick="buttonUpdateSelectedBoxLabel()"/>
       <input type="button" style="width:100px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="deleteSelectedBox()"/>
+      <br/>
     </td>
   </tr>
   </table>

@@ -12,6 +12,6 @@ img:hover {
 
 div.imageScroller {
     width: 128px;
-    height: 400px;
+    height: 600px;
     overflow-y: scroll;
 }
