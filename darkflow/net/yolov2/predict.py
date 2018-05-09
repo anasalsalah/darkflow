@@ -81,7 +81,12 @@ def postprocess(self, net_out, im, save_image=True, video_frame_num=0):
         if video_frame_num == 0:  # saving json for image file
             json_file = os.path.splitext(img_name)[0] + ".json"
             with open(json_file, 'w') as f:
-                f.write(json_text)
+                f.write("{\"image\": {\n"
+                            "\"width\": " + str(w) + ",\n"
+                            "\"height\": " + str(h) + ",\n" 
+                            "\"status\": \"New\",\n"
+                            "\"boxes\":" + json_text + "\n"
+                            "}}")
         else:  # saving json for video file
             json_file = os.path.splitext(self.FLAGS.demo)[0] + ".json"
             with open(json_file, 'a+') as f:
