@@ -34,7 +34,6 @@ function CanvasState(canvas, bgImg) {
   this.shapes = [];  // the collection of things to be drawn
   this.dragging = false; // keep track of when we are dragging
   this.resizing = false; // keep track of when we are resizing
-  this.resizeCorner = ""; // keep track from which corner we are resizing
   // the currently selected object. In the future we could turn this into an array for multiple selection
   this.selection = null;
   this.dragoffx = 0; // See mousedown and mousemove events for explanation
@@ -57,18 +56,16 @@ function CanvasState(canvas, bgImg) {
     var mouse = myState.getMouse(e);
     var mx = mouse.x;
     var my = mouse.y;
-    var resizeCorner = "";
     var shapes = myState.shapes;
     var event = new Event('updateSelectedBox');
 
     // give priority to resizing. loop over all shapes to check for corners
     for (var i = shapes.length-1; i >= 0; i--) {
 
-      resizeCorner = shapes[i].inCorner(mx, my);
-      if (resizeCorner != "") {
+      shapes[i].getResizeCorner(mx, my);
+      if (shapes[i].resizeCorner != "") {
         var mySel = shapes[i];
         myState.resizing = true;
-        myState.resizeCorner = resizeCorner;
         myState.dragging = false;
         myState.selection = mySel;
         myState.refreshCanvas();
@@ -87,7 +84,6 @@ function CanvasState(canvas, bgImg) {
         myState.dragoffy = my - mySel.y;
         myState.dragging = true;
         myState.resizing = false;
-        myState.resizeCorner = "";
         myState.selection = mySel;
         myState.refreshCanvas();
         myState.canvas.dispatchEvent(event);
@@ -99,7 +95,6 @@ function CanvasState(canvas, bgImg) {
     if (myState.selection) {
       myState.dragging = false;
       myState.resizing = false;
-      myState.resizeCorner = "";
       myState.selection = null;
       myState.refreshCanvas(); // Need to clear the old selection border
       myState.canvas.dispatchEvent(event);
@@ -112,29 +107,29 @@ function CanvasState(canvas, bgImg) {
 
       var mouse = myState.getMouse(e);
       var selection = myState.selection;
-      var resizeCorner = myState.resizeCorner;
+      var resizeCorner = selection.resizeCorner;
       var newX, newY, newW, newH;
       // find out from which corner the user is dragging the object,
       // then calculate the new values for the selected shape.
-      if (resizeCorner == "topleft") {
+      if (resizeCorner == TOP_LEFT) {
         newX = mouse.x;
         newY = mouse.y;
         newW = selection.x - mouse.x + selection.w;
         newH = selection.y - mouse.y + selection.h;
       }
-      if (resizeCorner == "topright") {
+      if (resizeCorner == TOP_RIGHT) {
         newX = selection.x;
         newY = mouse.y;
         newW = mouse.x - selection.x;
         newH = selection.y - mouse.y + selection.h;
       }
-      if (resizeCorner == "bottomright") {
+      if (resizeCorner == BOTTOM_RIGHT) {
         newX = selection.x;
         newY = selection.y;
         newW = mouse.x - selection.x;
         newH = mouse.y - selection.y;
       }
-      if (resizeCorner == "bottomleft") {
+      if (resizeCorner == BOTTOM_LEFT) {
         newX = mouse.x;
         newY = selection.y;
         newW = selection.x - mouse.x + selection.w;
@@ -162,7 +157,6 @@ function CanvasState(canvas, bgImg) {
 
     myState.dragging = false;
     myState.resizing = false;
-    myState.resizeCorner = "";
   }, true);
 
   // double click for making new shapes
@@ -216,9 +210,20 @@ CanvasState.prototype.draw = function() {
 
       var shape = shapes[i];
       // We can skip the drawing of elements that have moved off the screen:
-      //TODO: Limit shapes to fall within canvas. Do not allow moving off screen.
       if (shape.x > this.width || shape.y > this.height ||
-          shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
+          shape.x + shape.w < 0 || shape.y + shape.h < 0)
+          continue;
+
+      // Limit shapes to fall within canvas. Do not allow moving off screen.
+      if (shape.x < 0)
+        shape.x = 0;
+      if (shape.y < 0)
+        shape.y = 0;
+      if (shape.x + shape.w > this.canvas.width)
+        shape.x = this.canvas.width - shape.w;
+      if (shape.y + shape.h > this.canvas.height)
+        shape.y = this.canvas.height - shape.h;
+
       shape.drawBox(ctx);
     }
 
