@@ -18,7 +18,7 @@ darkflow_threshold = "0.25"
 
 accepted_formats = [".jpg", ".jpeg", ".png"]
 thumb_img_size = [100, 150]
-work_img_size = [800, 600]
+work_img_size = [1280, 1024]
 
 
 def start():
@@ -44,12 +44,12 @@ def start():
             print("Invalid file format " + file)
 
     # run yolo on the images
-    process = subprocess.run([darkflow_path + "/flow",
-                              "--imgdir", images_wrk_path,
-                              "--model", darkflow_path + darkflow_cfg,
-                              "--load", darkflow_path + darkflow_weights,
-                              "--threshold", darkflow_threshold,
-                              "--json"], stdout=subprocess.PIPE)
+    subprocess.run([darkflow_path + "/flow",
+                          "--imgdir", images_wrk_path,
+                          "--model", darkflow_path + darkflow_cfg,
+                          "--load", darkflow_path + darkflow_weights,
+                          "--threshold", darkflow_threshold,
+                          "--json"], stdout=subprocess.PIPE)
 
     # generate thumbnail and workspace versions of the images
     for file in os.listdir(images_wrk_path):
@@ -82,23 +82,28 @@ def start():
     # divide images into batches, creating a gTrack issue for each batch
 
 
-gTrack_request_URL = "https://gtools.globalme.net/gTrack"
-gTrack_request_header = {"Content-Type": "application/json",
-                         "X-Redmine-API-Key": "61c204ee38bf778a4f16f44383b203539c0ba5eb"}
+def gTrack_create_issue():
 
-r = requests.get(gTrack_request_URL + "/issues.json?issue_id=67448&offset=0&limit=1",
-                 headers=gTrack_request_header)
-print(r.status_code, r.reason, r.content, "\n")
+    gTrack_request_URL = "https://gtools.globalme.net/gTrack"
+    gTrack_request_header = {"Content-Type": "application/json",
+                             "X-Redmine-API-Key": "61c204ee38bf778a4f16f44383b203539c0ba5eb"}
 
-r = requests.post(gTrack_request_URL + "/issues.json",
-                  headers=gTrack_request_header,
-                  data={"issue": {"subject": "Example", "description": "This is a description", "project_id": 649,
-                                  "priority_id": 4, "tracker_id": 2, "status_id": 1, "author_id": 1120}})
-# "custom_fields":[{"value": "globalme.net", "name": "Globalme Application", "id": 52}]}
-print(r.status_code, r.reason, r.content, "\n")
+    r = requests.get(gTrack_request_URL + "/issues.json?issue_id=67448&offset=0&limit=1",
+                     headers=gTrack_request_header)
+    print(r.status_code, r.reason, r.content, "\n")
 
-r = requests.put(gTrack_request_URL + "/issues/67447.json",
-                 headers=gTrack_request_header,
-                 data={"issue": {"status": {"id": 17, "name": "In Progress"},
-                                 "notes": "The status was changed to In Progress"}})
-print(r.status_code, r.reason, r.content, "\n")
+    r = requests.post(gTrack_request_URL + "/issues.json",
+                      headers=gTrack_request_header,
+                      data={"issue": {"subject": "Example", "description": "This is a description", "project_id": 649,
+                                      "priority_id": 4, "tracker_id": 2, "status_id": 1, "author_id": 1120}})
+    # "custom_fields":[{"value": "globalme.net", "name": "Globalme Application", "id": 52}]}
+    print(r.status_code, r.reason, r.content, "\n")
+
+    r = requests.put(gTrack_request_URL + "/issues/67447.json",
+                     headers=gTrack_request_header,
+                     data={"issue": {"status": {"id": 17, "name": "In Progress"},
+                                     "notes": "The status was changed to In Progress"}})
+    print(r.status_code, r.reason, r.content, "\n")
+
+
+start()
