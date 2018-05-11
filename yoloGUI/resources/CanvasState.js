@@ -9,8 +9,6 @@ function CanvasState(canvas, bgImg) {
   // **** First some setup! ****
   this.canvas = canvas;
   this.bgImg = bgImg;
-  this.width = canvas.width;
-  this.height = canvas.height;
   this.ctx = canvas.getContext('2d');
   // This complicates things a little but it fixes mouse co-ordinate problems
   // when there's a border or padding. See getMouse for more detail
@@ -46,17 +44,18 @@ function CanvasState(canvas, bgImg) {
   // and when the events are fired on the canvas the variable "this" is going to mean the canvas!
   // Since we still want to use this particular CanvasState in the events we have to save a reference to it.
   // This is our reference!
-  var myState = this;
+  var myCanvState = this;
 
   //fixes a problem where double clicking causes text to get selected on the canvas
   canvas.addEventListener('selectstart', function(e) { e.preventDefault(); return false; }, false);
 
+
   // Up, down, and move are for dragging or resizing
   canvas.addEventListener('mousedown', function(e) {
-    var mouse = myState.getMouse(e);
+    var mouse = myCanvState.getMouse(e);
     var mx = mouse.x;
     var my = mouse.y;
-    var shapes = myState.shapes;
+    var shapes = myCanvState.shapes;
     var event = new Event('updateSelectedBox');
 
     // give priority to resizing. loop over all shapes to check for corners
@@ -65,11 +64,11 @@ function CanvasState(canvas, bgImg) {
       shapes[i].getResizeCorner(mx, my);
       if (shapes[i].resizeCorner != "") {
         var mySel = shapes[i];
-        myState.resizing = true;
-        myState.dragging = false;
-        myState.selection = mySel;
-        myState.refreshCanvas();
-        myState.canvas.dispatchEvent(event);
+        myCanvState.resizing = true;
+        myCanvState.dragging = false;
+        myCanvState.selection = mySel;
+        myCanvState.refreshCanvas();
+        myCanvState.canvas.dispatchEvent(event);
         return;
       }
     }
@@ -80,33 +79,35 @@ function CanvasState(canvas, bgImg) {
         var mySel = shapes[i];
         // Keep track of where in the object we clicked
         // so we can move it smoothly (see mousemove)
-        myState.dragoffx = mx - mySel.x;
-        myState.dragoffy = my - mySel.y;
-        myState.dragging = true;
-        myState.resizing = false;
-        myState.selection = mySel;
-        myState.refreshCanvas();
-        myState.canvas.dispatchEvent(event);
+        myCanvState.dragoffx = mx - mySel.x;
+        myCanvState.dragoffy = my - mySel.y;
+        myCanvState.dragging = true;
+        myCanvState.resizing = false;
+        myCanvState.selection = mySel;
+
+        myCanvState.refreshCanvas();
+        myCanvState.canvas.dispatchEvent(event);
         return;
       }
     }
     // havent returned means we have failed to select anything.
     // If there was an object selected, we deselect it
-    if (myState.selection) {
-      myState.dragging = false;
-      myState.resizing = false;
-      myState.selection = null;
-      myState.refreshCanvas(); // Need to clear the old selection border
-      myState.canvas.dispatchEvent(event);
+    if (myCanvState.selection) {
+      myCanvState.dragging = false;
+      myCanvState.resizing = false;
+      myCanvState.selection = null;
+      myCanvState.refreshCanvas(); // Need to clear the old selection border
+      myCanvState.canvas.dispatchEvent(event);
     }
   }, true);
 
+
   canvas.addEventListener('mousemove', function(e) {
 
-    if (myState.resizing) {
+    if (myCanvState.resizing) {
 
-      var mouse = myState.getMouse(e);
-      var selection = myState.selection;
+      var mouse = myCanvState.getMouse(e);
+      var selection = myCanvState.selection;
       var resizeCorner = selection.resizeCorner;
       var newX, newY, newW, newH;
       // find out from which corner the user is dragging the object,
@@ -140,44 +141,48 @@ function CanvasState(canvas, bgImg) {
       selection.y = newY;
       selection.w = newW;
       selection.h = newH;
-      myState.refreshCanvas(); // Something's resizing so we must redraw
+      myCanvState.refreshCanvas(); // Something's resizing so we must redraw
     }
-    if (myState.dragging) {
+    if (myCanvState.dragging) {
 
-      var mouse = myState.getMouse(e);
+      var mouse = myCanvState.getMouse(e);
       // We don't want to drag the object by its top-left corner, we want to drag it
       // from where we clicked. Thats why we saved the offset and use it here
-      myState.selection.x = mouse.x - myState.dragoffx;
-      myState.selection.y = mouse.y - myState.dragoffy;
-      myState.refreshCanvas(); // Something's dragging so we must redraw
+      myCanvState.selection.x = mouse.x - myCanvState.dragoffx;
+      myCanvState.selection.y = mouse.y - myCanvState.dragoffy;
+      myCanvState.refreshCanvas(); // Something's dragging so we must redraw
     }
   }, true);
+
 
   canvas.addEventListener('mouseup', function(e) {
 
-    myState.dragging = false;
-    myState.resizing = false;
+    myCanvState.dragging = false;
+    myCanvState.resizing = false;
   }, true);
+
 
   // double click for making new shapes
   canvas.addEventListener('dblclick', function(e) {
 
-    var mouse = myState.getMouse(e);
-    myState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 50, 50, 'rgba(0,255,0,.6)', 'New'));
+    var mouse = myCanvState.getMouse(e);
+    myCanvState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 50, 50, 'rgba(0,255,0,.6)', 'New'));
   }, true);
 
   // **** Options! ****
   this.selectionColor = '#CC0000';
   this.selectionWidth = 2;
   this.interval = 30;
-  setInterval(function() { myState.draw(); }, myState.interval);
+  setInterval(function() { myCanvState.draw(); }, myCanvState.interval);
 }
+
 
 CanvasState.prototype.addShape = function(shape) {
 
   this.shapes.push(shape);
   this.refreshCanvas();
 }
+
 
 CanvasState.prototype.clearShapes = function() {
 
@@ -186,10 +191,33 @@ CanvasState.prototype.clearShapes = function() {
   this.refreshCanvas();
 }
 
+
 CanvasState.prototype.clearCanvas = function() {
 
-  this.ctx.clearRect(0, 0, this.width, this.height);
+  this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 }
+
+
+CanvasState.prototype.setShapeWithinCanvas = function(shape) {
+
+  if (shape.x < 0) {
+    shape.x = 0;
+    this.refreshCanvas();
+  }
+  if (shape.y < 0) {
+    shape.y = 0;
+    this.refreshCanvas();
+  }
+  if (shape.x + shape.w > this.canvas.width) {
+    shape.x = this.canvas.width - shape.w;
+    this.refreshCanvas();
+  }
+  if (shape.y + shape.h > this.canvas.height) {
+    shape.y = this.canvas.height - shape.h;
+    this.refreshCanvas();
+  }
+}
+
 
 // While draw is called as often as the INTERVAL variable demands,
 // It only ever does something if the canvas gets invalidated by our code
@@ -210,20 +238,13 @@ CanvasState.prototype.draw = function() {
 
       var shape = shapes[i];
       // We can skip the drawing of elements that have moved off the screen:
-      if (shape.x > this.width || shape.y > this.height ||
-          shape.x + shape.w < 0 || shape.y + shape.h < 0)
+      if (shape.x > this.canvas.width || shape.y > this.canvas.height ||
+          shape.x + shape.w < 0 || shape.y + shape.h < 0) {
           continue;
+      }
 
       // Limit shapes to fall within canvas. Do not allow moving off screen.
-      if (shape.x < 0)
-        shape.x = 0;
-      if (shape.y < 0)
-        shape.y = 0;
-      if (shape.x + shape.w > this.canvas.width)
-        shape.x = this.canvas.width - shape.w;
-      if (shape.y + shape.h > this.canvas.height)
-        shape.y = this.canvas.height - shape.h;
-
+      this.setShapeWithinCanvas(shape);
       shape.drawBox(ctx);
     }
 
@@ -258,6 +279,7 @@ CanvasState.prototype.draw = function() {
   }
 }
 
+
 // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
 // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
 CanvasState.prototype.getMouse = function(e) {
@@ -284,6 +306,7 @@ CanvasState.prototype.getMouse = function(e) {
   return {x: mx, y: my};
 }
 
+
 CanvasState.prototype.drawImage = function() {
 
   var img = this.bgImg;
@@ -292,15 +315,13 @@ CanvasState.prototype.drawImage = function() {
   this.ctx.drawImage(img,0,0);
 }
 
-CanvasState.prototype.setDispatchUpdateCanvasEvent = function(isDispatch) {
-
-}
 
 CanvasState.prototype.refreshCanvas = function() {
 
   this.valid = false;
   this.canvas.dispatchEvent(new Event('updateCanvas'));
 }
+
 
 CanvasState.prototype.deleteSelectedBox = function() {
 
@@ -316,6 +337,7 @@ CanvasState.prototype.deleteSelectedBox = function() {
      }
   }
 }
+
 
 CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
 

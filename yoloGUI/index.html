@@ -23,9 +23,6 @@ function init() {
 
 function selectThumbnailImage(imageFile) {
 
-  // var imgThumbId = 'thumbImg' + index
-  // var imageContents = document.getElementById(imgThumbId);
-  // var imageFile = imageContents.src;
   document.getElementById('imageContents').src = imageFile;
   myCanvState.refreshCanvas();
 }
@@ -208,7 +205,7 @@ function displayInfoPopup() {
       </div>
     </td>
     <td valign="top">
-      <canvas id="theCanvas" width="800" height="600" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
+      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
       <br/>
       <div class="popup" onclick="displayInfoPopup()">
         <img src="resources/info_icon.png" width="20" height="20"/>
