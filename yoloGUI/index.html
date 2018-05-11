@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<script src="Shape.js"></script>
-<script src="CanvasState.js"></script>
+<script src="resources/Shape.js"></script>
+<script src="resources/CanvasState.js"></script>
 <script>
 
 var myCanvState;
@@ -21,11 +21,11 @@ function init() {
   drawBoxesFromJson(document.getElementById('jsonContents').textContent);
 }
 
-function selectThumbnailImage(index) {
+function selectThumbnailImage(imageFile) {
 
-  var imgThumbId = 'thumbImg' + index
-  var imageContents = document.getElementById(imgThumbId);
-  var imageFile = imageContents.src;
+  // var imgThumbId = 'thumbImg' + index
+  // var imageContents = document.getElementById(imgThumbId);
+  // var imageFile = imageContents.src;
   document.getElementById('imageContents').src = imageFile;
   myCanvState.refreshCanvas();
 }
@@ -184,26 +184,27 @@ function displayInfoPopup() {
 
 <html>
 <head>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="resources/styles.css">
 </head>
 <body onLoad='init()'>
   <img id="imageContents" src="samples/counter_work.jpg" style="display:none">
   <h1>Yolo Editor</h1>
+  You are now working on gTrack issue # {{ folder_id }}
   <table>
   <tr>
     <td valign="top">
       <div class="imageScroller">
-        <img src="samples/counter_work.jpg" class="thumb" id="thumbImg0" onclick="selectThumbnailImage(0)">
+        <img src="samples/counter_thumb.jpg" class="thumb" id="thumbImg0" onclick="selectThumbnailImage('samples/counter_work.jpg')">
         <br/>
-        <img src="samples/thief2_work.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage(1)">
+        <img src="samples/thief2_thumb.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage('samples/thief2_work.jpg')">
         <br/>
-        <img src="samples/sample_office_work.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage(2)">
+        <img src="samples/sample_office_thumb.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage('samples/sample_office_work.jpg')">
         <br/>
-        <img src="samples/sample_dog_work.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage(3)">
+        <img src="samples/sample_dog_thumb.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage('samples/sample_dog_work.jpg')">
         <br/>
-        <img src="samples/sample_horses.jpg" class="thumb" id="thumbImg4" onclick="selectThumbnailImage(4)">
+        <img src="samples/sample_horses_thumb.jpg" class="thumb" id="thumbImg4" onclick="selectThumbnailImage('samples/sample_horses_work.jpg')">
         <br/>
-        <img src="samples/sample_person_work.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage(5)">
+        <img src="samples/sample_person_thumb.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage('samples/sample_person_work.jpg')">
       </div>
     </td>
     <td valign="top">
