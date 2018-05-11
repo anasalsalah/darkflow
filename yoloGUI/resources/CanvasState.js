@@ -1,9 +1,6 @@
 // Original code by Simon Sarris
-// www.simonsarris.com
-// sarris@acm.org
-// Last update December 2011
-// Free to use and distribute at will
-// So long as you are nice to people, etc
+// www.simonsarris.com / sarris@acm.org / December 2011
+// Modified extensively by Anas Al Salah @ globalme.net
 
 function CanvasState(canvas, bgImg) {
   // **** First some setup! ****
@@ -272,10 +269,16 @@ CanvasState.prototype.draw = function() {
       ctx.beginPath();
       ctx.arc(mySel.x, mySel.y + mySel.h, 5, 0, 2 * Math.PI);
       ctx.fill(); ctx.stroke();
-    }
 
+
+    }
     // ** Add stuff you want drawn on top all the time here **
     this.valid = true;
+  }
+  else {
+    // a new image has been loaded and the canvas still needs to refresh
+    if (this.canvas.width==0 || this.canvas.height==0)
+        this.valid = false;
   }
 }
 

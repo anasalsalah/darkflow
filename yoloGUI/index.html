@@ -27,7 +27,7 @@ function selectThumbnailImage(imageFile) {
   myCanvState.refreshCanvas();
 }
 
-function handleImageFile() {
+function handleImageFileUpload() {
  
   var selectedFile = document.getElementById('imageInput').files[0];
   var imageContents = document.getElementById('imageContents');
@@ -46,7 +46,7 @@ function handleImageFile() {
   }
 }
 
-function handleJsonFile() {
+function handleJsonFileUpload() {
  
   var selectedFile = document.getElementById('jsonInput').files[0];
   var jsonContents = document.getElementById('jsonContents');
@@ -221,8 +221,8 @@ function displayInfoPopup() {
         </span>
       </div>
         <br/>
-        Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFile()"/>
-        Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFile()"/>
+        Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFileUpload()"/>
+        Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFileUpload()"/>
         <br/>
         <br/>
         <textarea id="jsonContents" readonly rows="5" cols="75">{"image": {
