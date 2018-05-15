@@ -7,17 +7,18 @@ def cliHandler(args):
     FLAGS.setDefaults()
     FLAGS.parseArgs(args)
 
+    # TODO: commented this out because of creating directories unnecessarily. uncomment if problematic.
     # make sure all necessary dirs exist
-    def _get_dir(dirs):
-        for d in dirs:
-            this = os.path.abspath(os.path.join(os.path.curdir, d))
-            if not os.path.exists(this): os.makedirs(this)
-    
-    requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup] # TODO: add FLAGS.outdir
-    if FLAGS.summary:
-        requiredDirectories.append(FLAGS.summary)
-
-    _get_dir(requiredDirectories)
+    # def _get_dir(dirs):
+    #     for d in dirs:
+    #         this = os.path.abspath(os.path.join(os.path.curdir, d))
+    #         if not os.path.exists(this): os.makedirs(this)
+    #
+    # requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup] # TODO: add FLAGS.outdir
+    # if FLAGS.summary:
+    #     requiredDirectories.append(FLAGS.summary)
+    #
+    # _get_dir(requiredDirectories)
 
     # fix FLAGS.load to appropriate type
     try: FLAGS.load = int(FLAGS.load)
