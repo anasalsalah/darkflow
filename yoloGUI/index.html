@@ -1,156 +1,97 @@
 <!DOCTYPE html>
 <script src="resources/Shape.js"></script>
 <script src="resources/CanvasState.js"></script>
+<script src="resources/jsonFunctions.js"></script>
 <script>
 
 var myCanvState;
+var selectedThumbImg;
+var imagesArrayLength;
 
 function init() {
 
   myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
-
-  myCanvState.canvas.addEventListener('updateSelectedBox', function(e) {
-    if(myCanvState.selection)
-      document.getElementById("selectedBoxLabel").value = myCanvState.selection.label;
-    else
-      document.getElementById("selectedBoxLabel").value = "";
-  }, true);
-
+  myCanvState.canvas.addEventListener('updateSelectedBox', updatedSelectedBoxLabelInput, true);
   myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
 
-  drawBoxesFromJson(document.getElementById('jsonContents').textContent);
+  selectThumbnailImage(0, '{{ images_array.0.work_image }}','{{ images_array.0.json_file }}')
+
+  imagesArrayLength = {{ images_array|length }}
 }
 
-function selectThumbnailImage(imageFile) {
 
-  document.getElementById('imageContents').src = imageFile;
-  myCanvState.refreshCanvas();
+function selectThumbnailImage(thumbIndex, imageFile, jsonFile) {
+
+  //save the contents of the json file to the server
+  imageContents = document.getElementById('imageContents');
+  imageContents.onload = loadJsonFile(jsonFile);
+  imageContents.src = imageFile;
+
+  //change class of previously selected thumb to "Done"
+  setSelectedImageDone();
+
+  //change class of currently selected thumb to "Selected"
+  selectedThumbImg = document.getElementById("thumbImg" + thumbIndex);
+  selectedThumbImg.classList.remove("thumb-done");
+  selectedThumbImg.classList.add("thumb-selected");
 }
 
-function handleImageFileUpload() {
- 
-  var selectedFile = document.getElementById('imageInput').files[0];
-  var imageContents = document.getElementById('imageContents');
-  var fileType = /.*image/;
 
-  if (selectedFile.type.match(fileType)) {
-     var reader = new FileReader();
-        reader.onload = function () {
-            imageContents.src = reader.result;
-	        myCanvState.refreshCanvas();
-        }
-        reader.readAsDataURL(selectedFile);
-  } 
-  else {
-    alert("File not supported! Your file type is: " + selectedFile.type);
+function setSelectedImageDone() {
+
+  if (selectedThumbImg != null) {
+    selectedThumbImg.classList.remove("thumb-selected");
+    selectedThumbImg.classList.add("thumb-done");
+
+    //save the json data for the current image
+    var jsonContents = document.getElementById('jsonContents');
+    if(jsonContents != null && jsonContents.name != "")
+      saveJsonFile(jsonContents.name, jsonContents.textContent);
   }
 }
 
-function handleJsonFileUpload() {
- 
-  var selectedFile = document.getElementById('jsonInput').files[0];
-  var jsonContents = document.getElementById('jsonContents');
-  var fileType = /.*json/;
+function selectPreviousImage() {
 
-  if (selectedFile.type.match(fileType)) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      jsonContents.textContent = reader.result;
-      drawBoxesFromJson(reader.result);
-    }
-    reader.readAsText(selectedFile);
-  } 
-  else {
-    jsonContents.textContent = "File not supported! Your file type is: " + selectedFile.type;
-  }
+  var currentId = selectedThumbImg.id;
+  var currentIndex = currentId.split("thumbImg")[1];
+  var prevIndex = parseInt(currentIndex) - 1;
+  var prevThumbImg = document.getElementById("thumbImg" + prevIndex);
+
+  setSelectedImageDone();
+
+  if (prevThumbImg!=null)
+    prevThumbImg.click();
+
+
 }
 
-function drawBoxesFromJson(jsonText) {
+function selectNextImage() {
 
-  myCanvState.clearShapes();
-  try {
+  var currentId = selectedThumbImg.id;
+  var currentIndex = currentId.split("thumbImg")[1];
+  var nextIndex = parseInt(currentIndex) + 1;
+  var nextThumbImg = document.getElementById("thumbImg" + nextIndex);
 
-    var image = JSON.parse(jsonText).image;
-    var boxes = image.boxes;
+  setSelectedImageDone();
 
-    if(boxes.length > 0) {
-      // disable listening to canvas changes while we are using the json content to update the canvas
-      myCanvState.canvas.removeEventListener('updateCanvas', updateJsonFromCanvas, true);
-
-      // the resolution of the actual image stored on the server
-      var trueW = image.width;
-      var trueH = image.height;
-      // the resolution of the image displayed in the browser
-      var workW = myCanvState.bgImg.width;
-      var workH = myCanvState.bgImg.height;
-      // the ratio of size between the two images (opposite to updateJsonFromCanvas)
-      var wRatio = workW / trueW;
-      var hRatio = workH / trueH;
-
-      for (i=0; i<boxes.length; i++) {
-        var label = boxes[i].label;
-        var x = Math.round(boxes[i].topleft.x * wRatio);
-        var y = Math.round(boxes[i].topleft.y * hRatio);
-        var w = Math.round(boxes[i].bottomright.x * wRatio - x);
-        var h = Math.round(boxes[i].bottomright.y * hRatio - y);
-
-        myCanvState.addShape(new Shape(x, y, w, h, 'rgba(127, 255, 212, .5)', label));
-      }
-      // re-enable listening to canvas changes
-      myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
-    }
-  }
-  catch (err){
-    alert ("An error occurred while trying to draw boxes based on the json file: " + err.message);
-  }
+  if (nextThumbImg!=null)
+    nextThumbImg.click();
 }
 
-function updateJsonFromCanvas() {
 
-  if (myCanvState.shapes && myCanvState.shapes.length > 0) {
-    // get the current json data
-    var data = JSON.parse(document.getElementById('jsonContents').textContent);
-    var image = data.image
-    var shapes = myCanvState.shapes;
-    image.boxes = [];
-
-    // the resolution of the actual image stored on the server
-    var trueW = image.width;
-    var trueH = image.height;
-    // the resolution of the image displayed in the browser
-    var workW = myCanvState.bgImg.width;
-    var workH = myCanvState.bgImg.height;
-    // the ratio of size between the two images (opposite to drawBoxesFromJson)
-    var wRatio = trueW / workW;
-    var hRatio = trueH / workH;
-
-    // fill in the new shapes in the json data
-    for (i=0; i<shapes.length; i++) {
-
-      var shape = shapes[i];
-      var topx = Math.round(shape.x * wRatio);
-      var topy = Math.round(shape.y * hRatio);
-      var bottomx = Math.round((shape.x + shape.w) * wRatio);
-      var bottomy = Math.round((shape.y + shape.h) * hRatio);
-
-      image.boxes[i] = {};
-      image.boxes[i].topleft = {}
-      image.boxes[i].topleft.x = topx;
-      image.boxes[i].topleft.y = topy;
-      image.boxes[i].label = shape.label;
-      image.boxes[i].confidence = 1;
-      image.boxes[i].bottomright = {}
-      image.boxes[i].bottomright.x = bottomx;
-      image.boxes[i].bottomright.y = bottomy;
-    }
-    document.getElementById('jsonContents').textContent = JSON.stringify(data);
-  }
+function updatedSelectedBoxLabelInput() {
+  if(myCanvState.selection)
+    document.getElementById("selectedBoxLabel").value = myCanvState.selection.label;
+  else
+    document.getElementById("selectedBoxLabel").value = "";
 }
+
 
 function buttonUpdateSelectedBoxLabel() {
 
   myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
 }
+
 
 function keyboardUpdateSelectedBoxLabel(e) {
 
@@ -158,10 +99,12 @@ function keyboardUpdateSelectedBoxLabel(e) {
     myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
 }
 
+
 function buttonDeleteSelectedBox() {
 
   myCanvState.deleteSelectedBox();
 }
+
 
 function keyboardDeleteSelectedBox() {
 
@@ -169,9 +112,11 @@ function keyboardDeleteSelectedBox() {
     myCanvState.deleteSelectedBox();
 }
 
+
 function buttonNewBox() {
-  myCanvState.addShape(new Shape(50, 50, 50, 50, 'rgba(0,255,0,.6)', 'New'));
+  myCanvState.addShape(new Shape(50, 50, 50, 50, 'rgba(127, 127, 212, .5)', 'New'));
 }
+
 
 function displayInfoPopup() {
   var popup = document.getElementById("infoPopup");
@@ -184,62 +129,43 @@ function displayInfoPopup() {
   <link rel="stylesheet" href="resources/styles.css">
 </head>
 <body onLoad='init()'>
-  <img id="imageContents" src="samples/counter_work.jpg" style="display:none">
-  <h1>Yolo Editor</h1>
-  You are now working on gTrack issue # {{ folder_id }}
+  <img id="imageContents" src="" style="display:none">
+  <textarea id="jsonContents" readonly rows="5" cols="75"></textarea><!-- style="display:none" -->
+  <h1 style="color:green">Welcome to the Yoloapp!</h1>
+  <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
   <table>
   <tr>
     <td valign="top">
+      <!-- TODO: set class of image based on its status -->
       <div class="imageScroller">
-        <img src="samples/counter_thumb.jpg" class="thumb" id="thumbImg0" onclick="selectThumbnailImage('samples/counter_work.jpg')">
-        <br/>
-        <img src="samples/thief2_thumb.jpg" class="thumb" id="thumbImg1" onclick="selectThumbnailImage('samples/thief2_work.jpg')">
-        <br/>
-        <img src="samples/sample_office_thumb.jpg" class="thumb" id="thumbImg2" onclick="selectThumbnailImage('samples/sample_office_work.jpg')">
-        <br/>
-        <img src="samples/sample_dog_thumb.jpg" class="thumb" id="thumbImg3" onclick="selectThumbnailImage('samples/sample_dog_work.jpg')">
-        <br/>
-        <img src="samples/sample_horses_thumb.jpg" class="thumb" id="thumbImg4" onclick="selectThumbnailImage('samples/sample_horses_work.jpg')">
-        <br/>
-        <img src="samples/sample_person_thumb.jpg" class="thumb" id="thumbImg5" onclick="selectThumbnailImage('samples/sample_person_work.jpg')">
+        {% for image in images_array %}
+            <img src="{{ image.thumb_image }}" class="thumb" id="thumbImg{{ forloop.counter0 }}" onclick="selectThumbnailImage({{ forloop.counter0 }},'{{ image.work_image }}','{{ image.json_file }}')">
+        {% endfor %}
       </div>
     </td>
-    <td valign="top">
-      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
-      <br/>
+    <td valign="top" style="border: 1px solid #ddd;">
+      <input type="button" style="width:117px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>
+      <input type="button" style="width:117px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+      Total Boxes: <span id="numOfBoxes"></span>
       <div class="popup" onclick="displayInfoPopup()">
         <img src="resources/info_icon.png" width="20" height="20"/>
         <span class="popuptext" id="infoPopup">
-          Select images from the scroller.<br/>
-          Click a box to select it, then drag, resize<br/>
-          relabel, or delete it.<br/>
-          <br/>
           Shortcuts:<br/>
           Double-click in image to create new box.<br/>
           Delete key: deletes a selected box.<br/>
           Enter key: saves a modified label.
         </span>
       </div>
-        <br/>
-        Select Image <input type="file" id="imageInput" alt="Select Image" onchange="handleImageFileUpload()"/>
-        Select JSON  <input type="file" id="jsonInput" alt="Select JSON" onchange="handleJsonFileUpload()"/>
-        <br/>
-        <br/>
-        <textarea id="jsonContents" readonly rows="5" cols="75">{"image": {
-"width": 1920,
-"height": 1080,
-"status": "New",
-"boxes":[{"confidence": 0.4, "label": "person", "bottomright": {"x": 981, "y": 1079}, "topleft": {"x": 40, "y": 0}}]
-}}</textarea>
-        <br/>
-    </td>
-    <td align="left">
-      <input type="button" style="width:117px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>
       <br/>Selected Box:
       <input type="text" style="width:140px;margin-bottom:5px;margin-top:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label" onkeyup="keyboardUpdateSelectedBoxLabel(this)" placeholder="Press Enter to Save"/>
-      <br/>
       <input type="button" style="width:117px" id="updateBoxButton" name="updateBoxButton" value="Save Label" onclick="buttonUpdateSelectedBoxLabel()"/>
-      <input type="button" style="width:117px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+      <br/>
+      <br/>
+      <input type="button" style="width:117px" id="PrevImageButton" name="PrevImageButton" value="Prev Image" onclick="selectPreviousImage()"/>
+      <input type="button" style="width:117px" id="NextImageButton" name="NextImageButton" value="Next Image" onclick="selectNextImage()"/>
+      <br/>
+      <br/>
+      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
       <br/>
     </td>
   </tr>

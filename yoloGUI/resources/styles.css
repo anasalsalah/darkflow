@@ -6,13 +6,27 @@ img.thumb {
 }
 
 /* Add a hover effect (blue shadow) */
-img:hover {
+img.thumb:hover {
     box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
 }
 
+img.thumb-selected {
+    border: 2px solid #ff00ff; /* Yellow border */
+    border-radius: 4px;  /* Rounded border */
+    padding: 5px; /* Some padding */
+    width: 100px; /* Set a small width */
+}
+
+img.thumb-done {
+    border: 2px solid #00ff00; /* Green border */
+    border-radius: 4px;  /* Rounded border */
+    padding: 5px; /* Some padding */
+    width: 100px; /* Set a small width */
+}
+
 div.imageScroller {
-    width: 128px;
-    height: 600px;
+    width: 130px;
+    /*height: 600px;*/
     overflow-y: scroll;
 }
 

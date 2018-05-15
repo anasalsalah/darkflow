@@ -163,7 +163,7 @@ function CanvasState(canvas, bgImg) {
   canvas.addEventListener('dblclick', function(e) {
 
     var mouse = myCanvState.getMouse(e);
-    myCanvState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 50, 50, 'rgba(0,255,0,.6)', 'New'));
+    myCanvState.addShape(new Shape(mouse.x - 10, mouse.y - 10, 50, 50, 'rgba(127, 255, 212, .5)', 'New'));
   }, true);
 
   // **** Options! ****
@@ -344,7 +344,12 @@ CanvasState.prototype.deleteSelectedBox = function() {
 
 CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
 
-  this.selection.label = newLabel;
-  this.canvas.dispatchEvent(new Event('updateSelectedBox'));
-  this.refreshCanvas();
+  if (this.selection && this.selection.label) {
+    this.selection.label = newLabel;
+    this.canvas.dispatchEvent(new Event('updateSelectedBox'));
+    this.refreshCanvas();
+  }
+  else {
+    alert("Please select a box in the image.");
+  }
 }
