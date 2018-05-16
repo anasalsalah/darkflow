@@ -1,0 +1,40 @@
+{
+  "labels": {
+    "objects": [
+      {
+        "id": 0,
+        "value": "person"
+      },
+      {
+        "id": 1,
+        "value": "face"
+      },
+      {
+        "id": 2,
+        "value": "car"
+      },
+      {
+        "id": 3,
+        "value": "bicycle"
+      },
+      {
+        "id": 4,
+        "value": "bird"
+      },
+      {
+        "id": 5,
+        "value": "dog"
+      }
+    ],
+    "landmarks": [
+      {
+        "id": 0,
+        "value": "person"
+      },
+      {
+        "id": 1,
+        "value": "car"
+      }
+    ]
+  }
+}
