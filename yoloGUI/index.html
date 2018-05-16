@@ -6,17 +6,19 @@
 
 var myCanvState;
 var selectedThumbImg;
-var imagesArrayLength;
+var imagesArrayLength = {{ images_array|length }};
+var issueId = {{ issue_id }};
+var folderId = {{ folder_id }};
 
 function init() {
+
+  loadLabelLists();
 
   myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
   myCanvState.canvas.addEventListener('updateSelectedBox', updatedSelectedBoxLabelInput, true);
   myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
 
-  selectThumbnailImage(0, '{{ images_array.0.work_image }}','{{ images_array.0.json_file }}')
-
-  imagesArrayLength = {{ images_array|length }}
+  selectThumbnailImage(0, '{{ images_array.0.work_image }}','{{ images_array.0.json_file }}');
 }
 
 
@@ -32,8 +34,23 @@ function selectThumbnailImage(thumbIndex, imageFile, jsonFile) {
 
   //change class of currently selected thumb to "Selected"
   selectedThumbImg = document.getElementById("thumbImg" + thumbIndex);
+  selectedThumbImg.classList.remove("thumb");
   selectedThumbImg.classList.remove("thumb-done");
   selectedThumbImg.classList.add("thumb-selected");
+
+  checkShowDoneButton();
+}
+
+function checkShowDoneButton() {
+
+  var thumbImg;
+  for (var i=0; i<imagesArrayLength; i++) {
+    if(document.getElementById("thumbImg" + i).classList.contains("thumb"))
+      return; // exit if at least one image is still not done yet
+  }
+
+  //for loop did not detect any not-done images
+  document.getElementById("doneButton").style = "";
 }
 
 
@@ -61,9 +78,8 @@ function selectPreviousImage() {
 
   if (prevThumbImg!=null)
     prevThumbImg.click();
-
-
 }
+
 
 function selectNextImage() {
 
@@ -80,6 +96,7 @@ function selectNextImage() {
 
 
 function updatedSelectedBoxLabelInput() {
+
   if(myCanvState.selection)
     document.getElementById("selectedBoxLabel").value = myCanvState.selection.label;
   else
@@ -87,16 +104,9 @@ function updatedSelectedBoxLabelInput() {
 }
 
 
-function buttonUpdateSelectedBoxLabel() {
+function updateSelectedBoxLabel() {
 
   myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
-}
-
-
-function keyboardUpdateSelectedBoxLabel(e) {
-
-  if (event.keyCode === 13)
-    myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
 }
 
 
@@ -114,26 +124,44 @@ function keyboardDeleteSelectedBox() {
 
 
 function buttonNewBox() {
+
   myCanvState.addShape(new Shape(50, 50, 50, 50, 'rgba(127, 127, 212, .5)', 'New'));
 }
 
 
-function displayInfoPopup() {
-  var popup = document.getElementById("infoPopup");
+function displayInfoPopup(popupId) {
+
+  var popup = document.getElementById(popupId);
   popup.classList.toggle("show");
 }
+
+
+function showBoxFields() {
+  document.getElementById("boxFields").style.display = "";
+  document.getElementById("landmarkFields").style.display = "none";
+}
+
+
+function showLandmarkFields() {
+  document.getElementById("boxFields").style.display = "none";
+  document.getElementById("landmarkFields").style.display = "";
+}
+
 </script>
 
 <html>
 <head>
   <link rel="stylesheet" href="resources/styles.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 </head>
-<body onLoad='init()'>
+<body onLoad='init()' style="padding:5px;">
+  <!-- two hidden fields for storing currently selected image and its json data -->
   <img id="imageContents" src="" style="display:none">
-  <textarea id="jsonContents" readonly rows="5" cols="75"></textarea><!-- style="display:none" -->
+  <textarea id="jsonContents" readonly rows="5" cols="75" style="display:none"></textarea>
   <h1 style="color:green">Welcome to the Yoloapp!</h1>
   <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
-  <table>
+  <br/>
+  <table style="border: 1px solid grey; padding: 5px;">
   <tr>
     <td valign="top">
       <!-- TODO: set class of image based on its status -->
@@ -143,28 +171,49 @@ function displayInfoPopup() {
         {% endfor %}
       </div>
     </td>
-    <td valign="top" style="border: 1px solid #ddd;">
-      <input type="button" style="width:117px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>
-      <input type="button" style="width:117px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
-      Total Boxes: <span id="numOfBoxes"></span>
-      <div class="popup" onclick="displayInfoPopup()">
-        <img src="resources/info_icon.png" width="20" height="20"/>
-        <span class="popuptext" id="infoPopup">
-          Shortcuts:<br/>
-          Double-click in image to create new box.<br/>
-          Delete key: deletes a selected box.<br/>
-          Enter key: saves a modified label.
-        </span>
-      </div>
-      <br/>Selected Box:
-      <input type="text" style="width:140px;margin-bottom:5px;margin-top:5px;" id="selectedBoxLabel" name="selectedBoxLabel" label="Box Label" onkeyup="keyboardUpdateSelectedBoxLabel(this)" placeholder="Press Enter to Save"/>
-      <input type="button" style="width:117px" id="updateBoxButton" name="updateBoxButton" value="Save Label" onclick="buttonUpdateSelectedBoxLabel()"/>
+    <td valign="top">
+        <div class="panel-group" id="accordion">
+            <a onclick="showBoxFields()" href="#">Edit Boxes</a>
+            <a onclick="showLandmarkFields()" href="#">Edit Landmarks</a>
+            <!-- box fields-->
+            <div id="boxFields" style="border:1px solid grey; padding: 5px; width: 420px;">
+              <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>
+              <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+              Total Boxes: <span id="numOfBoxes"></span>
+              <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
+                <img src="resources/info_icon.png" width="20" height="20"/>
+                <span class="popuptext" id="boxInfoPopup">
+                  Shortcuts:<br/>
+                  Double-click in image to create new box.<br/>
+                  Delete key: deletes a selected box.
+                </span>
+              </div>
+              <br/><br/>Selected Box:
+              <select id="selectedBoxLabel" style="padding:3px;" name="selectedBoxLabel" label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
+            </div>
+            <!-- landmark fields-->
+            <div id="landmarkFields" style="display:none; border:1px solid grey; padding: 5px; width: 420px;">
+              <input type="button" style="width:125px" id="newLandmarkButton" name="newLandmarkButton" value="New Landmark" onclick="buttonNewLandmark()"/>
+              <input type="button" style="width:125px" id="deleteLandmarkButton" name="deleteLandmarkButton" value="Delete Landmark" onclick="buttonDeleteSelectedLandmark()"/>
+              Total Landmarks: <span id="numOfLandmarks"></span>
+              <div class="popup" onclick="displayInfoPopup('landmarkInfoPopup')">
+                <img src="resources/info_icon.png" width="20" height="20"/>
+                <span class="popuptext" id="landmarkInfoPopup">
+                  Shortcuts:<br/>
+                  Delete key: deletes a selected landmark.
+                </span>
+              </div>
+              <br/><br/>Selected Landmark:
+              <select id="selectedLandmarkLabel" style="padding:3px;" name="selectedLandmarkLabel" label="Landmark Label" onchange="updateSelectedLandmarkLabel(this)"></select>
+            </div>
+        </div>
+      <!-- navigation buttons -->
+      <input type="button" style="width:125px" id="PrevImageButton" name="PrevImageButton" value="Prev Image" onclick="selectPreviousImage()"/>
+      <input type="button" style="width:125px" id="NextImageButton" name="NextImageButton" value="Next Image" onclick="selectNextImage()"/>
+      <input type="button" style="display:none" id="doneButton" name="doneButton" value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
       <br/>
       <br/>
-      <input type="button" style="width:117px" id="PrevImageButton" name="PrevImageButton" value="Prev Image" onclick="selectPreviousImage()"/>
-      <input type="button" style="width:117px" id="NextImageButton" name="NextImageButton" value="Next Image" onclick="selectNextImage()"/>
-      <br/>
-      <br/>
+      <!-- canvas where all the action happens -->
       <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
       <br/>
     </td>
