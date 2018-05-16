@@ -353,3 +353,36 @@ CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
     alert("Please select a box in the image.");
   }
 }
+
+CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
+
+    var image = JSON.parse(jsonText).image;
+    var boxes = image.boxes;
+
+    if(boxes.length > 0) {
+      // disable listening to canvas changes while we are using the json content to update the canvas
+      this.canvas.removeEventListener('updateCanvas', updateJsonFromCanvas, true);
+
+      // the resolution of the actual image stored on the server
+      var trueW = image.width;
+      var trueH = image.height;
+      // the resolution of the image displayed in the browser
+      var workW = this.bgImg.width;
+      var workH = this.bgImg.height;
+      // the ratio of size between the two images (opposite to updateJsonFromCanvas)
+      var wRatio = workW / trueW;
+      var hRatio = workH / trueH;
+
+      for (i=0; i<boxes.length; i++) {
+        var label = boxes[i].label;
+        var x = Math.round(boxes[i].topleft.x * wRatio);
+        var y = Math.round(boxes[i].topleft.y * hRatio);
+        var w = Math.round(boxes[i].bottomright.x * wRatio - x);
+        var h = Math.round(boxes[i].bottomright.y * hRatio - y);
+
+        this.addShape(new Shape(x, y, w, h, 'rgba(127, 255, 212, .5)', label));
+      }
+      // re-enable listening to canvas changes
+      this.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
+    }
+}
