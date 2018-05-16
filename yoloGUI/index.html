@@ -161,20 +161,21 @@ function showLandmarkFields() {
   <h1 style="color:green">Welcome to the Yoloapp!</h1>
   <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
   <br/>
-  <table style="border: 1px solid grey; padding: 5px;">
+  <table style="padding: 5px;">
   <tr>
-    <td valign="top">
+    <td valign="top" style="padding:5px;">
       <!-- TODO: set class of image based on its status -->
-      <div class="imageScroller">
+      <div class="imageScroller" style="border: 1px solid grey;">
         {% for image in images_array %}
             <img src="{{ image.thumb_image }}" class="thumb" id="thumbImg{{ forloop.counter0 }}" onclick="selectThumbnailImage({{ forloop.counter0 }},'{{ image.work_image }}','{{ image.json_file }}')">
         {% endfor %}
       </div>
     </td>
-    <td valign="top">
+    <td valign="top" style="padding:5px;">
         <div class="panel-group" id="accordion">
-            <a onclick="showBoxFields()" href="#">Edit Boxes</a>
-            <a onclick="showLandmarkFields()" href="#">Edit Landmarks</a>
+            <b><a onclick="showBoxFields()" href="#">Edit Boxes</a></b>
+            |
+            <b><a onclick="showLandmarkFields()" href="#">Edit Landmarks</a></b>
             <!-- box fields-->
             <div id="boxFields" style="border:1px solid grey; padding: 5px; width: 420px;">
               <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>

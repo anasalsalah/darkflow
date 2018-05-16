@@ -25,7 +25,7 @@ img.thumb-done {
 }
 
 div.imageScroller {
-    width: 130px;
+    width: 120px;
     height: 600px;
     overflow-y: scroll;
 }
