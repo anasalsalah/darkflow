@@ -1,18 +1,19 @@
 import os
 import shutil
 import glob
+from yoloGUI import yolo_settings as settings
+from yoloGUI import yolo_redmine as yolo_redmine
 from datetime import datetime
 import subprocess
-import requests
 from PIL import Image
-import json
 
-base_path = "/home/yolo/PycharmProjects/darkflow/yoloGUI/images"
-base_url = "http://127.0.0.1:8000"
 
-images_src_path = base_path + "/darkflow_images_src"
-images_wrk_path = base_path + "/darkflow_images_wrk"
-images_dst_path = base_path + "/darkflow_images_dst"
+BASE_PATH = settings.IMAGES_ROOT
+BASE_URL = settings.BASE_URL
+
+images_src_path = os.path.join(BASE_PATH, "darkflow_images_src")
+images_wrk_path = os.path.join(BASE_PATH, "darkflow_images_wrk")
+images_dst_path = os.path.join(BASE_PATH, "darkflow_images_dst")
 
 images_batch_size = 10
 
@@ -24,10 +25,6 @@ darkflow_threshold = "0.25"
 accepted_formats = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"]
 thumb_img_size = [100, 150]
 work_img_size = [1280, 1024]
-
-gtrack_request_url = "https://redmine.globalme.net"
-gtrack_request_header = {"Content-Type": "application/json",
-                         "X-Redmine-API-Key": "61c204ee38bf778a4f16f44383b203539c0ba5eb"}
 
 
 def start():
@@ -92,7 +89,7 @@ def start():
             dir_name = os.path.join(images_dst_path, ts)
             os.mkdir(dir_name)
             # create gTrack issue for this batch
-            gtrack_create_issue(dir_name)
+            yolo_redmine.create_issue(dir_name)
 
         file_name = os.path.splitext(file)[0]
         file_ext = os.path.splitext(file)[1]
@@ -113,41 +110,6 @@ def start():
         os.remove(file_path)
 
 
-def gtrack_create_issue(dir_name):
-
-    # r = requests.get(gTrack_request_URL + "/issues.json?issue_id=67448&offset=0&limit=1",
-    #                  headers=gTrack_request_header)
-    # print(r.status_code, r.reason, r.content, "\n")
-
-    # get the folder name
-    dir_name = os.path.basename(dir_name)
-    json_data = {"issue": {"subject": dir_name, "description": "This is a description", "project_id": 354,
-                           "priority_id": 4, "status_id": 1, "author_id": 1120,  # "tracker_id": 2,
-                           "custom_fields": [{"id": 28, "name": "URL", "value": ""}]
-                           }}
-
-    r = requests.post(gtrack_request_url + "/issues.json",
-                      headers=gtrack_request_header,
-                      data=json.dumps(json_data))
-
-    print(r.status_code, r.reason, r.content, "\n")
-
-    # get the issue ID from the response json data
-    json_response = json.loads(r.content.decode("utf-8"))
-    issue_id = json_response['issue']['id']
-    issue_url = base_url + "/folder?folder_id=" + dir_name + "&issue_id=" + str(issue_id)
-    jason_data = {"issue": {"status": {"id": issue_id},
-                            "custom_fields": [{"id": 28, "name": "URL", "value": issue_url}],
-                            "notes": "The URL was inserted successfully"}}
-
-    # update the new issue with the URL to the yolo app, containing folder name and issue ID
-    r = requests.put(gtrack_request_url + "/issues/" + str(issue_id) + ".json",
-                     headers=gtrack_request_header,
-                     data=json.dumps(jason_data))
-
-    print(r.status_code, r.reason, r.content, "\n")
-
-
 def cleanup():
     for file in os.listdir(images_wrk_path):
         os.remove(file)
@@ -155,6 +117,6 @@ def cleanup():
 
 try:
     start()
-except FileNotFoundError as e:
+except (ConnectionError, FileNotFoundError) as e:
     cleanup()
     print("An exception occurred: " + e)
