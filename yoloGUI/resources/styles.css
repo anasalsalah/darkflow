@@ -11,7 +11,7 @@ img.thumb:hover {
 }
 
 img.thumb-selected {
-    border: 2px solid #ff00ff; /* Yellow border */
+    border: 2px solid #ff00ff; /* Pink border */
     border-radius: 4px;  /* Rounded border */
     padding: 5px; /* Some padding */
     width: 100px; /* Set a small width */
@@ -26,7 +26,7 @@ img.thumb-done {
 
 div.imageScroller {
     width: 130px;
-    /*height: 600px;*/
+    height: 600px;
     overflow-y: scroll;
 }
 
@@ -56,4 +56,10 @@ div.imageScroller {
 /* Toggle this class - hide and show the popup */
 .popup .show {
     visibility: visible;
+}
+
+.collapsing {
+    -webkit-transition: none;
+    transition: none;
+    display: none;
 }

@@ -1,7 +1,7 @@
 function loadJsonFile(jsonFile) {
 
   var url = "/get_json?json_file=" + jsonFile;
-  getFileFromServer(url, function(response) {
+  getRequestFromServer(url, function(response) {
 
     if (response == null || response == "")
         alert("Could not retrieve the boxes data for this image!"
@@ -13,8 +13,41 @@ function loadJsonFile(jsonFile) {
   });
 }
 
+function loadLabelLists() {
+  var url = "/get_labels";
+  getRequestFromServer(url, function(response) {
 
-function getFileFromServer(url, doneCallback) {
+    if (response == null || response == "")
+        alert("Could not retrieve labels! Please contact your project manager.")
+    else {
+        var jsonLabels = JSON.parse(response);
+
+        var jsonBoxLabels = jsonLabels.labels.objects;
+        var boxLabelSelect = document.getElementById('selectedBoxLabel');
+        for (var i=0; i < jsonBoxLabels.length; i++) {
+            var option = document.createElement("option");
+            option.text = jsonBoxLabels[i].value;
+            option.value = jsonBoxLabels[i].value;
+            boxLabelSelect.add(option);
+        }
+
+        var jsonLandmarkLabels = jsonLabels.labels.landmarks;
+        var landmarkLabelSelect = document.getElementById('selectedLandmarkLabel');
+        for (var i=0; i<jsonLandmarkLabels.length; i++) {
+            var option = document.createElement("option");
+            option.text = jsonLandmarkLabels[i].value;
+            option.value = jsonLandmarkLabels[i].value;
+            landmarkLabelSelect.add(option);
+        }
+
+        boxLabelSelect.value = "";
+        landmarkLabelSelect.value = "";
+    }
+  });
+}
+
+
+function getRequestFromServer(url, doneCallback) {
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = handleStateChange;
@@ -32,7 +65,7 @@ function getFileFromServer(url, doneCallback) {
 function saveJsonFile(jsonFile, jsonText) {
 
   var url = "/save_json?json_file=" + jsonFile + "&json_status=" + status + "&json_text=" + jsonText;
-  saveFileToServer(url, jsonText, function(response) {
+  postRequestToServer(url, function(response) {
     if (response == null || response == "") {
         alert("Could not save the json data for this image. Please contact your project manager.")
     }
@@ -43,14 +76,27 @@ function saveJsonFile(jsonFile, jsonText) {
   });
 }
 
+function updateIssue(issueId, folderId) {
 
-function saveFileToServer(url, jsonText, doneCallback) {
+  var url = "/update_issue?issue_id=" + issueId + "&folder_id=" + folderId;
+  postRequestToServer(url, function(response) {
+    if (response == null || response == "") {
+        alert("Could not update the status of your work. Please contact your project manager.")
+    }
+    else {
+        alert("You're done here! You may now exit the browser.");
+    }
+  });
+}
+
+
+function postRequestToServer(url, doneCallback) {
 
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = handleStateChange;
   xhr.open("POST", url, true);
   xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.send(); //xhr.send(json_upload);
+  xhr.send(); //xhr.send(jsonText);
 
   function handleStateChange() {
     if (xhr.readyState === 4) {
