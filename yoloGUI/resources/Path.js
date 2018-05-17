@@ -1,8 +1,8 @@
 
 
-function Path(fill, label) {
+function Path(numOfPoints,fill, label) {
 
-    // this.length = numOfPoints;
+    this.numOfPoints = numOfPoints;
     this.fill = fill || '#AAAAAA';
     this.label = label || 'label';
     this.points = []; // array to hold the points forming the path

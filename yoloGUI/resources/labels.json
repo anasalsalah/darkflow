@@ -10,8 +10,7 @@
       {
         "name": "car",
         "parts": [
-          {"name": "wheels"},
-          {"name": "licensePlate"}
+          {"name": "wheelsAndLicense"}
         ]
       },
       {

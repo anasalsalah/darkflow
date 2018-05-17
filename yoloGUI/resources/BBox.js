@@ -65,3 +65,41 @@ BBox.prototype.inResizeCorner = function(mx, my) {
     this.resizeCorner = "";
   }
 }
+
+BBox.prototype.resizeMe = function(mx, my) {
+
+    let resizeCorner = this.resizeCorner;
+
+    let newX, newY, newW, newH;
+    // find out from which corner the user is dragging the object,
+    // then calculate the new values for the selected shape.
+    if (resizeCorner == TOP_LEFT) {
+    newX = mx;
+    newY = my;
+    newW = this.x - mx + this.w;
+    newH = this.y - my + this.h;
+    }
+    if (resizeCorner == TOP_RIGHT) {
+    newX = this.x;
+    newY = my;
+    newW = mx - this.x;
+    newH = this.y - my + this.h;
+    }
+    if (resizeCorner == BOTTOM_RIGHT) {
+    newX = this.x;
+    newY = this.y;
+    newW = mx - this.x;
+    newH = my - this.y;
+    }
+    if (resizeCorner == BOTTOM_LEFT) {
+    newX = mx;
+    newY = this.y;
+    newW = this.x - mx + this.w;
+    newH = mouse.y - this.y;
+    }
+    //assign the new values
+    this.x = newX;
+    this.y = newY;
+    this.w = newW;
+    this.h = newH;
+}

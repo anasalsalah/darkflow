@@ -102,11 +102,11 @@ function updatedSelectedBoxLabelFromCanvas() {
 
   let selectLabel = document.getElementById("selectBoxLabel");
 
-  if(myCanvState.selection && myCanvState.selection.label == selectLabel.value)
+  if(myCanvState.selectedBBox && myCanvState.selectedBBox.label == selectLabel.value)
     return; //no need to do anything since canvas box label matches dropdown value
 
-  if(myCanvState.selection)
-    selectLabel.value = myCanvState.selection.label;
+  if(myCanvState.selectedBBox)
+    selectLabel.value = myCanvState.selectedBBox.label;
   else
     selectLabel.value = "";
 
@@ -131,10 +131,16 @@ function displayAddPartFields(label) {
 
   selectPart = document.getElementById("selectPartType");
 
-  // remove any existing options.
+  // remove any existing options
   for(let k=selectPart.options.length-1; k >= 0; k--) {
     selectPart.options.remove(k);
   }
+  // add default option and select it
+  let option = document.createElement("option");
+  option.text = "Add Part";
+  option.value = DRAWING_BBOX;
+  selectPart.add(option);
+  selectPart.value = DRAWING_BBOX;
 
   //check if current label has parts and populate dropdown accordingly
   for (let i=0; i < labelData.labels.length; i++) {
@@ -143,10 +149,6 @@ function displayAddPartFields(label) {
         selectPart.style.display = "";
         let labelParts = labelData.labels[i].parts
         //add the parts to the dropdown
-        let option = document.createElement("option");
-        option.text = "Add Part";
-        option.value = DRAWING_BBOX;
-        selectPart.add(option);
         for(let j=0; j < labelParts.length; j++) {
             option = document.createElement("option");
             option.text = labelParts[j].name;
@@ -158,6 +160,7 @@ function displayAddPartFields(label) {
   }
   // could not find parts for selected label. hide the parts dropdown.
   selectPart.style.display = "none";
+  updateSelectedPartType(selectPart);
 }
 
 

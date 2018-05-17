@@ -5,8 +5,7 @@
 const DRAWING_BBOX = "bbox";
 const DRAWING_HEAD = "head";
 const DRAWING_TORSO = "torso";
-const DRAWING_WHEELS = "wheels";
-const DRAWING_LICENSE = "licensePlate";
+const DRAWING_CARWHEELS = "wheelsAndLicense";
 
 function CanvasState(canvas, bgImg) {
   // **** First some setup! ****
@@ -33,11 +32,10 @@ function CanvasState(canvas, bgImg) {
   this.valid = false; // when set to false, the canvas will redraw everything
   // this.isDispatchUpdateCanvasEvent = true; // used to control dispatching ////////////////////////////////////////
   this.bboxes = [];  // the collection of bounding boxes to be drawn
-  this.drawing = DRAWING_BBOX; // draw bounding boxes by default
+  this.drawing = DRAWING_BBOX;
   this.dragging = false; // keep track of when we are dragging
   this.resizing = false; // keep track of when we are resizing
-  // the currently selected object. In the future we could turn this into an array for multiple selection
-  this.selection = null;
+  this.selectedBBox = null;
   this.dragoffx = 0; // See mousedown and mousemove events for explanation
   this.dragoffy = 0;
 
@@ -53,27 +51,23 @@ function CanvasState(canvas, bgImg) {
   //fixes a problem where double clicking causes text to get selected on the canvas
   canvas.addEventListener('selectstart', function(e) { e.preventDefault(); return false; }, false);
 
-  // click is for adding wheel, torso, and license plate
+  // click is for adding torso or carwheels+licensePlate
   canvas.addEventListener('click', function(e) {
     let mouse = myCanvState.getMouse(e);
     let mx = mouse.x;
     let my = mouse.y;
-    let bboxes = myCanvState.bboxes;
-    let selection = myCanvState.selection;
+    let selectedBBox = myCanvState.selectedBBox;
 
-    if (selection && myCanvState.drawing == DRAWING_LICENSE) {
-        let licensePoint =  new Path('rgba(127, 0, 212, .3)', DRAWING_LICENSE);
-        licensePoint.points.push({'x':mx, 'y':my});
-        selection.shapesWithin.push(licensePoint);
+    if (selectedBBox && myCanvState.drawing == DRAWING_CARWHEELS) {
+        let carwheels =  new Path(5, 'rgba(127, 0, 212, .3)', DRAWING_CARWHEELS);
+        carwheels.points.push({'x':mx, 'y':my});
+        selectedBBox.shapesWithin.push(carwheels);
 
         myCanvState.refreshCanvas();
     }
-    /*
-    this.drawing == DRAWING_TORSO ||
-        this.drawing == DRAWING_WHEELS || */
   }, true);
 
-  // Up, down, and move are for dragging or resizing
+  // Up, down, and move are for dragging or resizing or adding a person's head
   canvas.addEventListener('mousedown', function(e) {
     let mouse = myCanvState.getMouse(e);
     let mx = mouse.x;
@@ -89,7 +83,7 @@ function CanvasState(canvas, bgImg) {
         let mySel = bboxes[i];
         myCanvState.resizing = true;
         myCanvState.dragging = false;
-        myCanvState.selection = mySel;
+        myCanvState.selectedBBox = mySel;
         myCanvState.refreshCanvas();
         myCanvState.canvas.dispatchEvent(event);
         return;
@@ -106,7 +100,8 @@ function CanvasState(canvas, bgImg) {
         myCanvState.dragoffy = my - mySel.y;
         myCanvState.dragging = true;
         myCanvState.resizing = false;
-        myCanvState.selection = mySel;
+        //myCanvState.drawing = DRAWING_BBOX;
+        myCanvState.selectedBBox = mySel;
 
         myCanvState.refreshCanvas();
         myCanvState.canvas.dispatchEvent(event);
@@ -115,12 +110,12 @@ function CanvasState(canvas, bgImg) {
     }
     // havent returned means we have failed to select anything.
     // If there was an object selected, we deselect it
-    if (myCanvState.selection) {
+    if (myCanvState.selectedBBox) {
       myCanvState.dragging = false;
       myCanvState.resizing = false;
-      myCanvState.selection = null;
-      myCanvState.drawing = DRAWING_BBOX;
-      myCanvState.refreshCanvas(); // Need to clear the old selection border
+      myCanvState.selectedBBox = null;
+      //myCanvState.drawing = DRAWING_BBOX;
+      myCanvState.refreshCanvas(); // Need to clear the old selectedBBox border
       myCanvState.canvas.dispatchEvent(event);
     }
   }, true);
@@ -131,55 +126,17 @@ function CanvasState(canvas, bgImg) {
     if (myCanvState.resizing) {
 
       let mouse = myCanvState.getMouse(e);
-      let mx = mouse.x;
-      let my = mouse.y;
-
-      let selection = myCanvState.selection;
-
-      let resizeCorner = selection.resizeCorner;
-
-      let newX, newY, newW, newH;
-      // find out from which corner the user is dragging the object,
-      // then calculate the new values for the selected shape.
-      if (resizeCorner == TOP_LEFT) {
-        newX = mx;
-        newY = my;
-        newW = selection.x - mx + selection.w;
-        newH = selection.y - my + selection.h;
-      }
-      if (resizeCorner == TOP_RIGHT) {
-        newX = selection.x;
-        newY = my;
-        newW = mx - selection.x;
-        newH = selection.y - my + selection.h;
-      }
-      if (resizeCorner == BOTTOM_RIGHT) {
-        newX = selection.x;
-        newY = selection.y;
-        newW = mx - selection.x;
-        newH = my - selection.y;
-      }
-      if (resizeCorner == BOTTOM_LEFT) {
-        newX = mx;
-        newY = selection.y;
-        newW = selection.x - mx + selection.w;
-        newH = mouse.y - selection.y;
-      }
-      //assign the new values
-      selection.x = newX;
-      selection.y = newY;
-      selection.w = newW;
-      selection.h = newH;
-      myCanvState.refreshCanvas(); // Something's resizing so we must redraw
+      myCanvState.selectedBBox.resizeMe(mouse.x, mouse.y);
+      myCanvState.refreshCanvas();
     }
     if (myCanvState.dragging) {
 
       let mouse = myCanvState.getMouse(e);
       // We don't want to drag the object by its top-left corner, we want to drag it
       // from where we clicked. Thats why we saved the offset and use it here
-      myCanvState.selection.x = mouse.x - myCanvState.dragoffx;
-      myCanvState.selection.y = mouse.y - myCanvState.dragoffy;
-      myCanvState.refreshCanvas(); // Something's dragging so we must redraw
+      myCanvState.selectedBBox.x = mouse.x - myCanvState.dragoffx;
+      myCanvState.selectedBBox.y = mouse.y - myCanvState.dragoffy;
+      myCanvState.refreshCanvas();
     }
   }, true);
 
@@ -216,7 +173,7 @@ CanvasState.prototype.addShape = function(shape) {
 CanvasState.prototype.clearShapes = function() {
 
   this.bboxes = [];
-  this.selection = null;
+  this.selectedBBox = null;
   this.refreshCanvas();
 }
 
@@ -266,7 +223,7 @@ CanvasState.prototype.draw = function() {
     for (let i = 0; i < l; i++) {
 
       let shape = bboxes[i];
-      // We can skip the drawing of elements that have moved off the screen:
+      // We can skip to draw elements that have moved off the screen:
       if (shape.x > this.canvas.width || shape.y > this.canvas.height ||
           shape.x + shape.w < 0 || shape.y + shape.h < 0) {
           continue;
@@ -277,13 +234,13 @@ CanvasState.prototype.draw = function() {
       shape.drawMe(ctx);
     }
 
-    // draw selection
+    // draw selectedBBox
     // right now this is just a stroke along the edge of the selected BBox
-    if (this.selection != null) {
+    if (this.selectedBBox != null) {
 
       ctx.strokeStyle = this.selectionColor;
       ctx.lineWidth = this.selectionWidth;
-      let mySel = this.selection;
+      let mySel = this.selectedBBox;
       ctx.strokeRect(mySel.x,mySel.y,mySel.w,mySel.h);
 
       //draw resize circles on the corners of selected box
@@ -362,10 +319,10 @@ CanvasState.prototype.deleteSelectedBox = function() {
 
   for (i=0; i< this.bboxes.length; i++) {
 
-     if (this.bboxes[i] == this.selection) {
+     if (this.bboxes[i] == this.selectedBBox) {
 
     	this.bboxes.splice(i,1);
-        this.selection = null;
+        this.selectedBBox = null;
         this.canvas.dispatchEvent(new Event('updateSelectedBox'));
         this.refreshCanvas();
         break;
@@ -376,8 +333,8 @@ CanvasState.prototype.deleteSelectedBox = function() {
 
 CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
 
-  if (this.selection && this.selection.label) {
-    this.selection.label = newLabel;
+  if (this.selectedBBox && this.selectedBBox.label) {
+    this.selectedBBox.label = newLabel;
     this.refreshCanvas();
   }
   else {
@@ -413,11 +370,12 @@ CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
         let h = Math.round(boxes[i].bottomright.y * hRatio - y);
 
         let bbox = new BBox(x, y, w, h, 'rgba(127, 255, 212, .5)', label);
-        if (boxes[i].parts){
-            for (let j=0; j<boxes[i].parts; j++) {
-                let part = new Path(boxes[i].parts.points, 'rgba(127, 0, 212, .3)', boxes[i].parts.label)
-            }
-        }
+        // TODO: add parts to bbox data
+//        if (boxes[i].parts){
+//            for (let j=0; j<boxes[i].parts; j++) {
+//                let part = new Path(boxes[i].parts.points, 'rgba(127, 0, 212, .3)', boxes[i].parts.label)
+//            }
+//        }
 
         this.addShape(bbox);
 
@@ -468,6 +426,8 @@ CanvasState.prototype.updateJsonFromCanvas = function(jsonText) {
       image.boxes[i].bottomright = {}
       image.boxes[i].bottomright.x = bottomx;
       image.boxes[i].bottomright.y = bottomy;
+
+      // TODO: add parts to boxes' json data
     }
 
     return data;
