@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<script src="resources/Shape.js"></script>
+<script src="resources/BBox.js"></script>
+<script src="resources/Path.js"></script>
 <script src="resources/CanvasState.js"></script>
 <script src="resources/jsonFunctions.js"></script>
 <script>
 
-var myCanvState;
-var selectedThumbImg;
-var imagesArrayLength = {{ images_array|length }};
-var issueId = {{ issue_id }};
-var folderId = {{ folder_id }};
+let myCanvState;
+let selectedThumbImg;
+let labelData;
+
+let imagesArrayLength = {{ images_array|length }};
+let issueId = {{ issue_id }};
+let folderId = {{ folder_id }};
 
 function init() {
 
   loadLabelLists();
 
   myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
-  myCanvState.canvas.addEventListener('updateSelectedBox', updatedSelectedBoxLabelInput, true);
+  myCanvState.canvas.addEventListener('updateSelectedBox', updatedSelectedBoxLabelFromCanvas, true);
   myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
 
   selectThumbnailImage(0, '{{ images_array.0.work_image }}','{{ images_array.0.json_file }}');
@@ -24,7 +27,7 @@ function init() {
 
 function selectThumbnailImage(thumbIndex, imageFile, jsonFile) {
 
-  //save the contents of the json file to the server
+  //get the contents of the json file for the selected image from the server
   imageContents = document.getElementById('imageContents');
   imageContents.onload = loadJsonFile(jsonFile);
   imageContents.src = imageFile;
@@ -34,7 +37,7 @@ function selectThumbnailImage(thumbIndex, imageFile, jsonFile) {
 
   //change class of currently selected thumb to "Selected"
   selectedThumbImg = document.getElementById("thumbImg" + thumbIndex);
-  selectedThumbImg.classList.remove("thumb");
+  selectedThumbImg.classList.remove("thumb-unselected");
   selectedThumbImg.classList.remove("thumb-done");
   selectedThumbImg.classList.add("thumb-selected");
 
@@ -43,9 +46,9 @@ function selectThumbnailImage(thumbIndex, imageFile, jsonFile) {
 
 function checkShowDoneButton() {
 
-  var thumbImg;
-  for (var i=0; i<imagesArrayLength; i++) {
-    if(document.getElementById("thumbImg" + i).classList.contains("thumb"))
+  let thumbImg;
+  for (let i=0; i<imagesArrayLength; i++) {
+    if(document.getElementById("thumbImg" + i).classList.contains("thumb-unselected"))
       return; // exit if at least one image is still not done yet
   }
 
@@ -57,22 +60,22 @@ function checkShowDoneButton() {
 function setSelectedImageDone() {
 
   if (selectedThumbImg != null) {
-    selectedThumbImg.classList.remove("thumb-selected");
-    selectedThumbImg.classList.add("thumb-done");
-
     //save the json data for the current image
-    var jsonContents = document.getElementById('jsonContents');
+    let jsonContents = document.getElementById('jsonContents');
     if(jsonContents != null && jsonContents.name != "")
       saveJsonFile(jsonContents.name, jsonContents.textContent);
+
+    selectedThumbImg.classList.remove("thumb-selected");
+    selectedThumbImg.classList.add("thumb-done");
   }
 }
 
 function selectPreviousImage() {
 
-  var currentId = selectedThumbImg.id;
-  var currentIndex = currentId.split("thumbImg")[1];
-  var prevIndex = parseInt(currentIndex) - 1;
-  var prevThumbImg = document.getElementById("thumbImg" + prevIndex);
+  let currentId = selectedThumbImg.id;
+  let currentIndex = currentId.split("thumbImg")[1];
+  let prevIndex = parseInt(currentIndex) - 1;
+  let prevThumbImg = document.getElementById("thumbImg" + prevIndex);
 
   setSelectedImageDone();
 
@@ -83,10 +86,10 @@ function selectPreviousImage() {
 
 function selectNextImage() {
 
-  var currentId = selectedThumbImg.id;
-  var currentIndex = currentId.split("thumbImg")[1];
-  var nextIndex = parseInt(currentIndex) + 1;
-  var nextThumbImg = document.getElementById("thumbImg" + nextIndex);
+  let currentId = selectedThumbImg.id;
+  let currentIndex = currentId.split("thumbImg")[1];
+  let nextIndex = parseInt(currentIndex) + 1;
+  let nextThumbImg = document.getElementById("thumbImg" + nextIndex);
 
   setSelectedImageDone();
 
@@ -95,18 +98,66 @@ function selectNextImage() {
 }
 
 
-function updatedSelectedBoxLabelInput() {
+function updatedSelectedBoxLabelFromCanvas() {
+
+  let selectLabel = document.getElementById("selectBoxLabel");
+
+  if(myCanvState.selection && myCanvState.selection.label == selectLabel.value)
+    return; //no need to do anything since canvas box label matches dropdown value
 
   if(myCanvState.selection)
-    document.getElementById("selectedBoxLabel").value = myCanvState.selection.label;
+    selectLabel.value = myCanvState.selection.label;
   else
-    document.getElementById("selectedBoxLabel").value = "";
+    selectLabel.value = "";
+
+  displayAddPartFields(selectLabel.value);
 }
 
 
-function updateSelectedBoxLabel() {
+function updateSelectedBoxLabel(selectLabel) {
 
-  myCanvState.updateSelectedBoxLabel(document.getElementById("selectedBoxLabel").value);
+  myCanvState.updateSelectedBoxLabel(selectLabel.value);
+  displayAddPartFields(selectLabel.value);
+}
+
+
+function updateSelectedPartType(selectPart) {
+
+  myCanvState.drawing = selectPart.value;
+}
+
+
+function displayAddPartFields(label) {
+
+  selectPart = document.getElementById("selectPartType");
+
+  // remove any existing options.
+  for(let k=selectPart.options.length-1; k >= 0; k--) {
+    selectPart.options.remove(k);
+  }
+
+  //check if current label has parts and populate dropdown accordingly
+  for (let i=0; i < labelData.labels.length; i++) {
+    if (labelData.labels[i].name == label && labelData.labels[i].parts) {
+        //display the Add Part dropdown
+        selectPart.style.display = "";
+        let labelParts = labelData.labels[i].parts
+        //add the parts to the dropdown
+        let option = document.createElement("option");
+        option.text = "Add Part";
+        option.value = DRAWING_BBOX;
+        selectPart.add(option);
+        for(let j=0; j < labelParts.length; j++) {
+            option = document.createElement("option");
+            option.text = labelParts[j].name;
+            option.value = labelParts[j].name;
+            selectPart.add(option);
+        }
+        return;
+    }
+  }
+  // could not find parts for selected label. hide the parts dropdown.
+  selectPart.style.display = "none";
 }
 
 
@@ -125,28 +176,14 @@ function keyboardDeleteSelectedBox() {
 
 function buttonNewBox() {
 
-  myCanvState.addShape(new Shape(50, 50, 50, 50, 'rgba(127, 127, 212, .5)', 'New'));
+  myCanvState.addShape(new BBox(50, 50, 50, 50, 'rgba(127, 127, 212, .5)', 'New'));
 }
-
 
 function displayInfoPopup(popupId) {
 
-  var popup = document.getElementById(popupId);
+  let popup = document.getElementById(popupId);
   popup.classList.toggle("show");
 }
-
-
-function showBoxFields() {
-  document.getElementById("boxFields").style.display = "";
-  document.getElementById("landmarkFields").style.display = "none";
-}
-
-
-function showLandmarkFields() {
-  document.getElementById("boxFields").style.display = "none";
-  document.getElementById("landmarkFields").style.display = "";
-}
-
 </script>
 
 <html>
@@ -167,19 +204,19 @@ function showLandmarkFields() {
       <!-- TODO: set class of image based on its status -->
       <div class="imageScroller" style="border: 1px solid grey;">
         {% for image in images_array %}
-            <img src="{{ image.thumb_image }}" class="thumb" id="thumbImg{{ forloop.counter0 }}" onclick="selectThumbnailImage({{ forloop.counter0 }},'{{ image.work_image }}','{{ image.json_file }}')">
+            <img src="{{ image.thumb_image }}" class="thumb thumb-unselected" id="thumbImg{{ forloop.counter0 }}"
+                 onclick="selectThumbnailImage({{ forloop.counter0 }},'{{ image.work_image }}','{{ image.json_file }}')">
         {% endfor %}
       </div>
     </td>
     <td valign="top" style="padding:5px;">
-        <div class="panel-group" id="accordion">
-            <b><a onclick="showBoxFields()" href="#">Edit Boxes</a></b>
-            |
-            <b><a onclick="showLandmarkFields()" href="#">Edit Landmarks</a></b>
-            <!-- box fields-->
+        <div class="panel-group">
+            <b>Edit Boxes</b>
             <div id="boxFields" style="border:1px solid grey; padding: 5px; width: 420px;">
-              <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton" value="New Box" onclick="buttonNewBox()"/>
-              <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton" value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+              <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton"
+                     value="New Box" onclick="buttonNewBox()"/>
+              <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
+                     value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
               Total Boxes: <span id="numOfBoxes"></span>
               <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
                 <img src="resources/info_icon.png" width="20" height="20"/>
@@ -190,28 +227,19 @@ function showLandmarkFields() {
                 </span>
               </div>
               <br/><br/>Selected Box:
-              <select id="selectedBoxLabel" style="padding:3px;" name="selectedBoxLabel" label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
-            </div>
-            <!-- landmark fields-->
-            <div id="landmarkFields" style="display:none; border:1px solid grey; padding: 5px; width: 420px;">
-              <input type="button" style="width:125px" id="newLandmarkButton" name="newLandmarkButton" value="New Landmark" onclick="buttonNewLandmark()"/>
-              <input type="button" style="width:125px" id="deleteLandmarkButton" name="deleteLandmarkButton" value="Delete Landmark" onclick="buttonDeleteSelectedLandmark()"/>
-              Total Landmarks: <span id="numOfLandmarks"></span>
-              <div class="popup" onclick="displayInfoPopup('landmarkInfoPopup')">
-                <img src="resources/info_icon.png" width="20" height="20"/>
-                <span class="popuptext" id="landmarkInfoPopup">
-                  Shortcuts:<br/>
-                  Delete key: deletes a selected landmark.
-                </span>
-              </div>
-              <br/><br/>Selected Landmark:
-              <select id="selectedLandmarkLabel" style="padding:3px;" name="selectedLandmarkLabel" label="Landmark Label" onchange="updateSelectedLandmarkLabel(this)"></select>
+              <select id="selectBoxLabel" name="selectBoxLabel" style="padding:3px;"
+                      label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
+              <select id="selectPartType" name="selectPartType"  style="padding:3px; display:none;"
+                      label="Part Type" value="Add Part" onchange="updateSelectedPartType(this)"></select>
             </div>
         </div>
       <!-- navigation buttons -->
-      <input type="button" style="width:125px" id="PrevImageButton" name="PrevImageButton" value="Prev Image" onclick="selectPreviousImage()"/>
-      <input type="button" style="width:125px" id="NextImageButton" name="NextImageButton" value="Next Image" onclick="selectNextImage()"/>
-      <input type="button" style="display:none" id="doneButton" name="doneButton" value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
+      <input type="button" style="width:125px" id="PrevImageButton" name="PrevImageButton"
+             value="Prev Image" onclick="selectPreviousImage()"/>
+      <input type="button" style="width:125px" id="NextImageButton" name="NextImageButton"
+             value="Next Image" onclick="selectNextImage()"/>
+      <input type="button" style="display:none" id="doneButton" name="doneButton"
+             value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
       <br/>
       <br/>
       <!-- canvas where all the action happens -->

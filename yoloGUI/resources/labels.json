@@ -1,40 +1,30 @@
 {
-  "labels": {
-    "objects": [
+  "labels": [
       {
-        "id": 0,
-        "value": "person"
+        "name": "person",
+        "parts": [
+          {"name": "head"},
+          {"name": "torso"}
+        ]
       },
       {
-        "id": 1,
-        "value": "face"
+        "name": "car",
+        "parts": [
+          {"name": "wheels"},
+          {"name": "licensePlate"}
+        ]
       },
       {
-        "id": 2,
-        "value": "car"
+        "name": "bicycle"
       },
       {
-        "id": 3,
-        "value": "bicycle"
+        "name": "bike"
       },
       {
-        "id": 4,
-        "value": "bird"
+        "name": "bird"
       },
       {
-        "id": 5,
-        "value": "dog"
-      }
-    ],
-    "landmarks": [
-      {
-        "id": 0,
-        "value": "person"
-      },
-      {
-        "id": 1,
-        "value": "car"
+        "name": "dog"
       }
     ]
-  }
 }
