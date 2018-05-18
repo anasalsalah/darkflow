@@ -2,11 +2,6 @@
 // www.simonsarris.com / sarris@acm.org / December 2011
 // Modified extensively by Anas Al Salah @ globalme.net / May 2018
 
-const DRAWING_NONE = "none";
-const DRAWING_HEAD = "head";
-const DRAWING_TORSO = "torso";
-const DRAWING_CARWHEELS = "wheelsAndLicense";
-
 function CanvasState(canvas, bgImg) {
   // **** First some setup! ****
   this.canvas = canvas;
@@ -30,9 +25,8 @@ function CanvasState(canvas, bgImg) {
   // **** Keep track of state! ****
 
   this.valid = false; // when set to false, the canvas will redraw everything
-  // this.isDispatchUpdateCanvasEvent = true; // used to control dispatching ////////////////////////////////////////
-  this.shapes = [];  // the collection of bounding boxes to be drawn
-  this.drawing = DRAWING_NONE;
+  this.shapes = [];  // stores the shapes that get drawn on the canvas
+  this.drawing = DRAWING_NONE; // keep track of when we are drawing parts
   this.dragging = false; // keep track of when we are dragging
   this.resizing = false; // keep track of when we are resizing
   this.selectedShape = null;
@@ -69,86 +63,108 @@ function CanvasState(canvas, bgImg) {
         let my = mouse.y;
         let selectedShape = myCanvState.selectedShape;
 
-        // creating a new part
-        if (selectedShape && selectedShape.parent == null && myCanvState.drawing != DRAWING_NONE) {
-            let newPath =  new Path(myCanvState.pathStyle, myCanvState.drawing, selectedShape);
-            newPath.addPoint(mx, my);
-            //add the new shape and set it as selected
-            myCanvState.addShape(newPath);
-            myCanvState.selectedShape = newPath;
-        }
-        // a part in the process of getting drawn
-        else if (selectedShape && selectedShape.parent != null && myCanvState.drawing != DRAWING_NONE) {
+        if (isShapeAPath(myCanvState.drawing)) {
 
-            selectedShape.addPoint(mx, my);
-            if (selectedShape.isComplete()) {
-                myCanvState.drawing = DRAWING_NONE;
-                myCanvState.refreshCanvas();
+            if (selectedShape.parent == null) { // creating a new path for a currently selected box
+                let newPath =  new Path(myCanvState.pathStyle, myCanvState.drawing, selectedShape);
+                newPath.addPoint(mx, my);
+                //add the new shape and set it as selected
+                myCanvState.addShape(newPath);
+                myCanvState.selectedShape = newPath;
+            }
+            else { // a path in the process of getting drawn
+                selectedShape.addPoint(mx, my);
+                if (selectedShape.isComplete()) { // finished drawing the path
+                    myCanvState.drawing = DRAWING_NONE;
+                    myCanvState.selectedShape = myCanvState.selectedShape.parent;
+                    myCanvState.refreshCanvas();
+                }
             }
         }
     }
   }, true);
 
-  // Up, down, and move are for dragging or resizing or adding a person's head
+  // Up, down, and move are for dragging or resizing or adding a part that's a bbox
   canvas.addEventListener('mousedown', function(e) {
 
-    if (myCanvState.drawing != DRAWING_NONE)
+    if (isShapeAPath(myCanvState.drawing)) // a path is still being drawn
         return;
 
-    let mouse = myCanvState.getMouse(e);
-    let mx = mouse.x;
-    let my = mouse.y;
-    let shapes = myCanvState.shapes;
-    let event = new Event('updateSelectedBox');
+    if (isShapeABBox(myCanvState.drawing)) { // a part that's a bbox is getting created
 
-    // give priority to resizing. loop over all shapes to check for corners
-    for (let i = shapes.length-1; i >= 0; i--) {
+        let mouse = myCanvState.getMouse(e);
+        let mx = mouse.x;
+        let my = mouse.y;
 
-      shapes[i].setResizeCorner(mx, my);
-      if (shapes[i].resizeCorner != -1) {
-        let mySel = shapes[i];
-        myCanvState.resizing = true;
-        myCanvState.dragging = false;
-        myCanvState.selectedShape = mySel;
-        myCanvState.refreshCanvas();
-        myCanvState.canvas.dispatchEvent(event);
-        return;
-      }
+        let bbox = new BBox(mx, my, 0, 0, myCanvState.pathStyle, myCanvState.drawing, myCanvState.selectedShape);
+        myCanvState.addShape(bbox);
+        myCanvState.selectedShape = bbox;
     }
-    // if user is not resizing, loop over shapes to check if dragging
-    for (let i = shapes.length-1; i >= 0; i--) {
+    else { // check for dragging or resizing
+        let mouse = myCanvState.getMouse(e);
+        let mx = mouse.x;
+        let my = mouse.y;
+        let shapes = myCanvState.shapes;
+        let event = new Event('updateSelectedBox');
 
-      if (shapes[i].contains(mx, my)) {
-        let mySel = shapes[i];
-        // Keep track of where in the object we clicked
-        // so we can move it smoothly (see mousemove)
-        myCanvState.dragStartX = mx;
-        myCanvState.dragStartY = my;
-        myCanvState.dragging = true;
-        myCanvState.resizing = false;
-        myCanvState.selectedShape = mySel;
+        // give priority to resizing. loop over all shapes to check for corners
+        for (let i = shapes.length-1; i >= 0; i--) {
 
-        myCanvState.refreshCanvas();
-        myCanvState.canvas.dispatchEvent(event);
-        return;
-      }
-    }
-    // havent returned means we have failed to select anything.
-    // If there was an object selected, we deselect it
-    if (myCanvState.selectedShape) {
-      myCanvState.dragging = false;
-      myCanvState.resizing = false;
-      myCanvState.selectedShape = null;
-      myCanvState.refreshCanvas(); // Need to clear the old selectedShape border
-      myCanvState.canvas.dispatchEvent(event);
+          shapes[i].setResizeCorner(mx, my);
+          if (shapes[i].resizeCorner != -1) {
+            let mySel = shapes[i];
+            myCanvState.resizing = true;
+            myCanvState.dragging = false;
+            myCanvState.selectedShape = mySel;
+            myCanvState.refreshCanvas();
+            myCanvState.canvas.dispatchEvent(event);
+            return;
+          }
+        }
+        // if user is not resizing, loop over shapes to check if dragging
+        for (let i = shapes.length-1; i >= 0; i--) {
+
+          if (shapes[i].contains(mx, my)) {
+            let mySel = shapes[i];
+            // Keep track of where in the object we clicked
+            // so we can move it smoothly (see mousemove)
+            myCanvState.dragStartX = mx;
+            myCanvState.dragStartY = my;
+            myCanvState.dragging = true;
+            myCanvState.resizing = false;
+            myCanvState.selectedShape = mySel;
+
+            myCanvState.refreshCanvas();
+            myCanvState.canvas.dispatchEvent(event);
+            return;
+          }
+        }
+        // havent returned means we have failed to select anything.
+        // If there was an object selected, we deselect it
+        if (myCanvState.selectedShape) {
+          myCanvState.dragging = false;
+          myCanvState.resizing = false;
+          myCanvState.selectedShape = null;
+          myCanvState.refreshCanvas(); // Need to clear the old selectedShape border
+          myCanvState.canvas.dispatchEvent(event);
+        }
     }
   }, true);
 
 
   canvas.addEventListener('mousemove', function(e) {
 
-    if (myCanvState.drawing != DRAWING_NONE) { //currently drawing a part
+    if (isShapeAPath(myCanvState.drawing)
+            && myCanvState.selectedShape.parent != null) { //currently drawing a part that's a path
       myCanvState.refreshCanvas();
+    }
+    else if (isShapeABBox(myCanvState.drawing)
+                && myCanvState.selectedShape.parent != null) { //currently dragging a part that's a bbox
+
+        let mouse = myCanvState.getMouse(e);
+        myCanvState.selectedShape.resizeCorner = BOTTOM_RIGHT;
+        myCanvState.selectedShape.resizeMe(mouse.x, mouse.y);
+        myCanvState.refreshCanvas();
     }
     else if (myCanvState.resizing) {
 
@@ -171,6 +187,11 @@ function CanvasState(canvas, bgImg) {
 
   canvas.addEventListener('mouseup', function(e) {
 
+    if (isShapeABBox(myCanvState.drawing)) { //finished drawing a part that's a bbox
+        myCanvState.drawing = DRAWING_NONE;
+        myCanvState.selectedShape = myCanvState.selectedShape.parent;
+        myCanvState.refreshCanvas();
+    }
     myCanvState.dragging = false;
     myCanvState.resizing = false;
   }, true);
@@ -226,11 +247,6 @@ CanvasState.prototype.draw = function() {
     for (let i = 0; i < l; i++) {
 
       let shape = shapes[i];
-      // We can skip to draw elements that have moved off the screen:
-//      if (shape.x > this.canvas.width || shape.y > this.canvas.height ||
-//          shape.x + shape.w < 0 || shape.y + shape.h < 0) {
-//          continue;
-//      }
 
       // Limit shapes to fall within canvas. Do not allow moving off screen.
       shape.setWithinCanvas(this.canvas.width, this.canvas.height);
