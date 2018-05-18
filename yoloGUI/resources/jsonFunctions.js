@@ -109,7 +109,7 @@ function drawBoxesFromJson(jsonText) {
 
   try {
     myCanvState.drawBoxesFromJson(jsonText);
-    document.getElementById('numOfBoxes').textContent = myCanvState.bboxes.length;
+    document.getElementById('numOfBoxes').textContent = myCanvState.shapes.length;
   }
   catch (err){
     alert ("An error occurred while trying to draw boxes based on the json file: " + err.message);
@@ -119,12 +119,12 @@ function drawBoxesFromJson(jsonText) {
 
 function updateJsonFromCanvas() {
 
-  if (myCanvState.bboxes && myCanvState.bboxes.length > 0) {
+  if (myCanvState.shapes && myCanvState.shapes.length > 0) {
     // get the current json text
     let jsonText = document.getElementById('jsonContents').textContent;
     // update the json data based on whatever is drawn in canvas
     let jsonData = myCanvState.updateJsonFromCanvas(jsonText);
     document.getElementById('jsonContents').textContent = JSON.stringify(jsonData);
   }
-  document.getElementById('numOfBoxes').textContent = myCanvState.bboxes.length;
+  document.getElementById('numOfBoxes').textContent = myCanvState.shapes.length;
 }

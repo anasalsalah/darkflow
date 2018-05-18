@@ -102,11 +102,11 @@ function updatedSelectedBoxLabelFromCanvas() {
 
   let selectLabel = document.getElementById("selectBoxLabel");
 
-  if(myCanvState.selectedBBox && myCanvState.selectedBBox.label == selectLabel.value)
+  if(myCanvState.selectedShape && myCanvState.selectedShape.label == selectLabel.value)
     return; //no need to do anything since canvas box label matches dropdown value
 
-  if(myCanvState.selectedBBox)
-    selectLabel.value = myCanvState.selectedBBox.label;
+  if(myCanvState.selectedShape)
+    selectLabel.value = myCanvState.selectedShape.label;
   else
     selectLabel.value = "";
 
@@ -138,9 +138,9 @@ function displayAddPartFields(label) {
   // add default option and select it
   let option = document.createElement("option");
   option.text = "Add Part";
-  option.value = DRAWING_BBOX;
+  option.value = DRAWING_NONE;
   selectPart.add(option);
-  selectPart.value = DRAWING_BBOX;
+  selectPart.value = DRAWING_NONE;
 
   //check if current label has parts and populate dropdown accordingly
   for (let i=0; i < labelData.labels.length; i++) {
@@ -166,20 +166,20 @@ function displayAddPartFields(label) {
 
 function buttonDeleteSelectedBox() {
 
-  myCanvState.deleteSelectedBox();
+  myCanvState.deleteSelectedShape();
 }
 
 
 function keyboardDeleteSelectedBox() {
 
   if (event.keyCode === 46)
-    myCanvState.deleteSelectedBox();
+    myCanvState.deleteSelectedShape();
 }
 
 
 function buttonNewBox() {
 
-  myCanvState.addShape(new BBox(50, 50, 50, 50, 'rgba(127, 127, 212, .5)', 'New'));
+  myCanvState.addShape(new BBox(50, 50, 50, 50, myCanvState.bboxStyle, 'New'));
 }
 
 function displayInfoPopup(popupId) {

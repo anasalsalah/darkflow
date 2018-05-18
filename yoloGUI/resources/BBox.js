@@ -1,11 +1,10 @@
-const TOP_LEFT = "topleft";
-const TOP_RIGHT = "topright";
-const BOTTOM_RIGHT = "bottomright";
-const BOTTOM_LEFT = "bottomleft";
+const TOP_LEFT = 0;
+const TOP_RIGHT = 1;
+const BOTTOM_RIGHT = 2;
+const BOTTOM_LEFT = 3;
 
-// Constructor for BBox objects to hold data for all drawn objects.
-// For now they will just be defined as rectangles.
-function BBox(x, y, w, h, fill, label) {
+// TODO: Path and BBox to inherit from abstract class Shape.
+function BBox(x, y, w, h, fill, label, parent = null) {
   // This is a very simple and unsafe constructor. All we're doing is checking if the values exist.
   // "x || 0" just means "if there is a value for x, use that. Otherwise use 0."
   // But we aren't checking anything else! We could put "Lalala" for the value of x
@@ -15,8 +14,19 @@ function BBox(x, y, w, h, fill, label) {
   this.h = h || 1;
   this.fill = fill || '#AAAAAA';
   this.label = label || 'label';
-  this.resizeCorner = "";
-  this.shapesWithin = []; //a BBox can have within it one or more shapes within it
+  this.resizeCorner = -1;
+  this.parent = parent;
+//  this.children = [];
+}
+
+
+BBox.prototype.getX = function() {
+    return this.x;
+}
+
+
+BBox.prototype.getY = function() {
+    return this.y;
 }
 
 // Draws this shape to a given context
@@ -27,10 +37,6 @@ BBox.prototype.drawMe = function(ctx) {
   ctx.font = "18px Arial bold";
   ctx.fillStyle = "black";
   ctx.fillText(this.label,this.x+5, this.y+18);
-
-  for (let i=0; i<this.shapesWithin.length; i++) {
-    this.shapesWithin[i].drawMe(ctx);
-  }
 }
 
 // Determine if a point is inside the shape's bounds
@@ -42,7 +48,7 @@ BBox.prototype.contains = function(mx, my) {
 }
 
 // Check if Mouse X,Y fall in one of the shape's corners
-BBox.prototype.inResizeCorner = function(mx, my) {
+BBox.prototype.setResizeCorner = function(mx, my) {
 
   // check for topleft corner
   if (this.x-5 < mx && mx < this.x+5 && this.y-5 < my && my < this.y+5) {
@@ -59,12 +65,12 @@ BBox.prototype.inResizeCorner = function(mx, my) {
   // check for bottomleft corner
   else if (this.x-5 < mx && mx < this.x+5 && this.y+this.h-5 < my && my < this.y+this.h+5) {
 	this.resizeCorner = BOTTOM_LEFT;
-	return BOTTOM_LEFT;
   }
   else {
-    this.resizeCorner = "";
+    this.resizeCorner = -1;
   }
 }
+
 
 BBox.prototype.resizeMe = function(mx, my) {
 
@@ -74,32 +80,77 @@ BBox.prototype.resizeMe = function(mx, my) {
     // find out from which corner the user is dragging the object,
     // then calculate the new values for the selected shape.
     if (resizeCorner == TOP_LEFT) {
-    newX = mx;
-    newY = my;
-    newW = this.x - mx + this.w;
-    newH = this.y - my + this.h;
+        newX = mx;
+        newY = my;
+        newW = this.x - mx + this.w;
+        newH = this.y - my + this.h;
     }
     if (resizeCorner == TOP_RIGHT) {
-    newX = this.x;
-    newY = my;
-    newW = mx - this.x;
-    newH = this.y - my + this.h;
+        newX = this.x;
+        newY = my;
+        newW = mx - this.x;
+        newH = this.y - my + this.h;
     }
     if (resizeCorner == BOTTOM_RIGHT) {
-    newX = this.x;
-    newY = this.y;
-    newW = mx - this.x;
-    newH = my - this.y;
+        newX = this.x;
+        newY = this.y;
+        newW = mx - this.x;
+        newH = my - this.y;
     }
     if (resizeCorner == BOTTOM_LEFT) {
-    newX = mx;
-    newY = this.y;
-    newW = this.x - mx + this.w;
-    newH = mouse.y - this.y;
+        newX = mx;
+        newY = this.y;
+        newW = this.x - mx + this.w;
+        newH = my - this.y;
     }
     //assign the new values
     this.x = newX;
     this.y = newY;
     this.w = newW;
     this.h = newH;
+}
+
+BBox.prototype.setWithinCanvas = function(width, height) {
+
+  if (this.x < 0) {
+    this.x = 0;
+  }
+  if (this.y < 0) {
+    this.y = 0;
+  }
+  if (this.x + this.w > width) {
+    this.x = width - this.w;
+  }
+  if (this.y + this.h > height) {
+    this.y = height - this.h;
+  }
+}
+
+BBox.prototype.dragMe = function(x, y) {
+
+  this.x += x;
+  this.y += y;
+}
+
+BBox.prototype.highlightMe = function(ctx, color, lineWidth) {
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.strokeRect(this.x,this.y,this.w,this.h);
+
+    //draw resize circles on the corners of selected box
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(this.x + this.w, this.y, 5, 0, 2 * Math.PI);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(this.x + this.w, this.y + this.h, 5, 0, 2 * Math.PI);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(this.x, this.y + this.h, 5, 0, 2 * Math.PI);
+    ctx.fill(); ctx.stroke();
 }
