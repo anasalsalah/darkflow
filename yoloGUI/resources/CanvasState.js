@@ -69,16 +69,15 @@ function CanvasState(canvas, bgImg) {
         let my = mouse.y;
         let selectedShape = myCanvState.selectedShape;
 
-        // creating a new carwheels part
+        // creating a new part
         if (selectedShape && selectedShape.parent == null && myCanvState.drawing != DRAWING_NONE) {
-            let newPath =  new Path(myCanvState.pathStyle, myCanvState.drawing);
+            let newPath =  new Path(myCanvState.pathStyle, myCanvState.drawing, selectedShape);
             newPath.addPoint(mx, my);
-            newPath.parent = selectedShape;
             //add the new shape and set it as selected
             myCanvState.addShape(newPath);
             myCanvState.selectedShape = newPath;
         }
-        // a carwheels part in the process of getting drawn
+        // a part in the process of getting drawn
         else if (selectedShape && selectedShape.parent != null && myCanvState.drawing != DRAWING_NONE) {
 
             selectedShape.addPoint(mx, my);
@@ -336,33 +335,44 @@ CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
       // disable listening to canvas changes while we are using the json content to update the canvas
       this.canvas.removeEventListener('updateCanvas', updateJsonFromCanvas, true);
 
-      // the resolution of the actual image stored on the server
-      let trueW = image.width;
-      let trueH = image.height;
-      // the resolution of the image displayed in the browser
-      let workW = this.bgImg.width;
-      let workH = this.bgImg.height;
-      // the ratio of size between the two images (opposite to updateJsonFromCanvas)
-      let wRatio = workW / trueW;
-      let hRatio = workH / trueH;
+      // the ratio of size between the working vs. original image (opposite to updateJsonFromCanvas)
+      let wRatio = this.bgImg.width / image.width;
+      let hRatio = this.bgImg.height / image.height;
 
       for (let i=0; i<boxes.length; i++) {
-        let label = boxes[i].label;
-        let x = Math.round(boxes[i].topleft.x * wRatio);
-        let y = Math.round(boxes[i].topleft.y * hRatio);
-        let w = Math.round(boxes[i].bottomright.x * wRatio - x);
-        let h = Math.round(boxes[i].bottomright.y * hRatio - y);
+        let box = boxes[i];
+        let label = box.label;
+        let x = Math.round(box.topleft.x * wRatio);
+        let y = Math.round(box.topleft.y * hRatio);
+        let w = Math.round(box.bottomright.x * wRatio - x);
+        let h = Math.round(box.bottomright.y * hRatio - y);
 
         let bbox = new BBox(x, y, w, h, this.bboxStyle, label);
-        // TODO: add parts to bbox data
-//        if (boxes[i].parts){
-//            for (let j=0; j<boxes[i].parts; j++) {
-//                let part = new Path(boxes[i].parts.points, 'rgba(127, 0, 212, .3)', boxes[i].parts.label)
-//            }
-//        }
-
         this.addShape(bbox);
 
+        if (box.parts) {
+
+            for (let j=0; j<box.parts.length; j++) {
+              let part = box.parts[j];
+              let label = part.label;
+              if (part.points) { // part is a Path
+                let path = new Path(this.pathStyle, label, bbox);
+                for (let k=0; k<part.points.length; k++) {
+                  point = part.points[k];
+                  path.addPoint(point.x * wRatio, point.y * hRatio);
+                }
+                this.addShape(path);
+              }
+              else { // part is a BBox
+                let x = Math.round(part.topleft.x * wRatio);
+                let y = Math.round(part.topleft.y * hRatio);
+                let w = Math.round(part.bottomright.x * wRatio - x);
+                let h = Math.round(part.bottomright.y * hRatio - y);
+                let child_bbox = new BBox(x, y, w, h, this.bboxStyle, label, bbox);
+                this.addShape(child_bbox);
+              }
+            }
+        }
       }
       // re-enable listening to canvas changes
       this.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
@@ -382,36 +392,53 @@ CanvasState.prototype.updateJsonFromCanvas = function(jsonText) {
     let shapes = myCanvState.shapes;
     image.boxes = [];
 
-    // the resolution of the actual image stored on the server
-    let trueW = image.width;
-    let trueH = image.height;
-    // the resolution of the image displayed in the browser
-    let workW = myCanvState.bgImg.width;
-    let workH = myCanvState.bgImg.height;
-    // the ratio of size between the two images (opposite to drawBoxesFromJson)
-    let wRatio = trueW / workW;
-    let hRatio = trueH / workH;
+    // the ratio of size between the working vs. original image (opposite to drawBoxesFromJson)
+    let wRatio = image.width / myCanvState.bgImg.width;;
+    let hRatio = image.height / myCanvState.bgImg.height;
 
     // fill in the new shapes in the json data
-    for (i=0; i<shapes.length; i++) {
+    for (let i=0; i<shapes.length; i++) {
 
-      let shape = shapes[i];
-      let topx = Math.round(shape.x * wRatio);
-      let topy = Math.round(shape.y * hRatio);
-      let bottomx = Math.round((shape.x + shape.w) * wRatio);
-      let bottomy = Math.round((shape.y + shape.h) * hRatio);
+      var shape = shapes[i];
+      if (shape.parent == null) { // a bounding box
+        image.boxes[i] = {};
+        let box = image.boxes[i];
+        box.label = shape.label;
+        box.confidence = 1;
+        box.topleft = {}
+        box.topleft.x = Math.round(shape.x * wRatio);
+        box.topleft.y = Math.round(shape.y * hRatio);
+        box.bottomright = {}
+        box.bottomright.x = Math.round((shape.x + shape.w) * wRatio);
+        box.bottomright.y = Math.round((shape.y + shape.h) * hRatio);
 
-      image.boxes[i] = {};
-      image.boxes[i].topleft = {}
-      image.boxes[i].topleft.x = topx;
-      image.boxes[i].topleft.y = topy;
-      image.boxes[i].label = shape.label;
-      image.boxes[i].confidence = 1;
-      image.boxes[i].bottomright = {}
-      image.boxes[i].bottomright.x = bottomx;
-      image.boxes[i].bottomright.y = bottomy;
-
-      // TODO: add parts to boxes' json data
+        if (shape.children.length > 0) { // bounding box has parts
+            box.parts = [];
+            for (let j=0; j<shape.children.length; j++) {
+                box.parts[j] = {};
+                let child = shape.children[j];
+                let part = box.parts[j];
+                part.label = child.label;
+                if (child instanceof BBox) {
+                    part.topleft = {}
+                    part.topleft.x = Math.round(child.x * wRatio);
+                    part.topleft.y = Math.round(child.y * hRatio);
+                    part.bottomright = {}
+                    part.bottomright.x = Math.round((child.x + child.w) * wRatio);
+                    part.bottomright.y = Math.round((child.y + child.h) * hRatio);
+                }
+                else if (child instanceof Path) {
+                    part.points = [];
+                    for (let k=0; k<child.points.length; k++) {
+                        let point = child.points[k];
+                        part.points[k] = {};
+                        part.points[k].x = point.x * wRatio;
+                        part.points[k].y = point.y * hRatio;
+                    }
+                }
+            }
+        }
+      }
     }
 
     return data;

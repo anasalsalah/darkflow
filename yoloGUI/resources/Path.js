@@ -16,12 +16,14 @@ function Path(fill, label, parent = null) {
     this.label = label || 'label';
     this.points = []; // array to hold the points forming the path
     this.resizeCorner = -1;
+
+    this.children = [];
     this.parent = parent;
-//    if (parent!=null && parent.children)
-//        parent.children.push(this);
+    if (this.parent != null)
+      this.parent.children.push(this);
 }
 
-
+// common to the Shape parent class
 Path.prototype.getX = function() {
 
     let theX = 999999;
@@ -31,7 +33,7 @@ Path.prototype.getX = function() {
     return theX;
 }
 
-
+// common to the Shape parent class
 Path.prototype.getY = function() {
 
     let theY = 999999;
@@ -41,13 +43,14 @@ Path.prototype.getY = function() {
     return theY;
 }
 
-
+// common to the Shape parent class
 Path.prototype.contains = function(mx, my) {
   // check if Mouse X,Y falls in the area inside the shape
   let point = {'x': mx, 'y': my};
   return  isInside (this, point);
 }
 
+// common to the Shape parent class
 Path.prototype.setResizeCorner = function(mx, my) {
 
     for (let i=0; i<this.points.length; i++) {
@@ -60,14 +63,14 @@ Path.prototype.setResizeCorner = function(mx, my) {
     this.resizeCorner = -1;
 }
 
-
+// common to the Shape parent class
 Path.prototype.resizeMe = function(mx, my) {
 
     this.points[this.resizeCorner].x = mx;
     this.points[this.resizeCorner].y = my;
 }
 
-
+// common to the Shape parent class
 Path.prototype.drawMe = function(ctx) {
 
     ctx.fillStyle = this.fill;
@@ -86,19 +89,20 @@ Path.prototype.drawMe = function(ctx) {
     }
 }
 
-
+// specific to the Path class
 Path.prototype.addPoint = function(mx, my) {
 
     if (!this.isComplete())
         this.points.push({'x':mx, 'y':my});
 }
 
-
+// specific to the Path class
 Path.prototype.isComplete = function() {
 
     return this.points.length == this.numOfPoints;
 }
 
+// common to the Shape parent class
 Path.prototype.setWithinCanvas = function(width, height) {
 
     for(let i=1; i<this.points.length; i++) {
@@ -119,7 +123,7 @@ Path.prototype.setWithinCanvas = function(width, height) {
     }
 }
 
-
+// common to the Shape parent class
 Path.prototype.dragMe = function(x, y) {
 
     for(let i=0; i<this.points.length; i++) {
@@ -128,7 +132,7 @@ Path.prototype.dragMe = function(x, y) {
     }
 }
 
-
+// common to the Shape parent class
 Path.prototype.highlightMe = function(ctx, color, lineWidth) {
 
     //ctx.strokeStyle = color;
@@ -154,8 +158,8 @@ Path.prototype.highlightMe = function(ctx, color, lineWidth) {
     }
 }
 
-// geometric functions to calculate if a point is inside a polygon
-// the following code has been copied and adapted from:
+// below are geometric functions to calculate if a point is inside a polygon.
+// the following code has been copied and adapted to js from:
 // https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
 
 // Given three colinear points p, q, r, the function checks if

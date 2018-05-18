@@ -15,21 +15,24 @@ function BBox(x, y, w, h, fill, label, parent = null) {
   this.fill = fill || '#AAAAAA';
   this.label = label || 'label';
   this.resizeCorner = -1;
+
+  this.children = [];
   this.parent = parent;
-//  this.children = [];
+  if (this.parent != null)
+    this.parent.children.push(this);
 }
 
-
+// common to the Shape parent class
 BBox.prototype.getX = function() {
     return this.x;
 }
 
-
+// common to the Shape parent class
 BBox.prototype.getY = function() {
     return this.y;
 }
 
-// Draws this shape to a given context
+// common to the Shape parent class
 BBox.prototype.drawMe = function(ctx) {
 
   ctx.fillStyle = this.fill;
@@ -39,7 +42,7 @@ BBox.prototype.drawMe = function(ctx) {
   ctx.fillText(this.label,this.x+5, this.y+18);
 }
 
-// Determine if a point is inside the shape's bounds
+// common to the Shape parent class
 BBox.prototype.contains = function(mx, my) {
   // check if Mouse X,Y fall in the area between
   // the shape's X and (X + Width) and its Y and (Y + Height)
@@ -47,7 +50,7 @@ BBox.prototype.contains = function(mx, my) {
           (this.y <= my) && (this.y + this.h >= my);
 }
 
-// Check if Mouse X,Y fall in one of the shape's corners
+// common to the Shape parent class
 BBox.prototype.setResizeCorner = function(mx, my) {
 
   // check for topleft corner
@@ -71,7 +74,7 @@ BBox.prototype.setResizeCorner = function(mx, my) {
   }
 }
 
-
+// common to the Shape parent class
 BBox.prototype.resizeMe = function(mx, my) {
 
     let resizeCorner = this.resizeCorner;
@@ -110,6 +113,7 @@ BBox.prototype.resizeMe = function(mx, my) {
     this.h = newH;
 }
 
+// common to the Shape parent class
 BBox.prototype.setWithinCanvas = function(width, height) {
 
   if (this.x < 0) {
@@ -126,12 +130,14 @@ BBox.prototype.setWithinCanvas = function(width, height) {
   }
 }
 
+// common to the Shape parent class
 BBox.prototype.dragMe = function(x, y) {
 
   this.x += x;
   this.y += y;
 }
 
+// common to the Shape parent class
 BBox.prototype.highlightMe = function(ctx, color, lineWidth) {
 
     ctx.strokeStyle = color;

@@ -170,10 +170,34 @@ function buttonDeleteSelectedBox() {
 }
 
 
-function keyboardDeleteSelectedBox() {
+function keyboardShortcut() {
 
-  if (event.keyCode === 46)
-    myCanvState.deleteSelectedShape();
+  switch (event.keyCode) {
+
+    case 46: // Delete key
+      myCanvState.deleteSelectedShape();
+      break;
+    case 67: // 'c' for car
+      selectBoxLabel.value = 'car';
+      updateSelectedBoxLabel(selectBoxLabel);
+      break;
+    case 80: // 'p' for person
+      selectBoxLabel.value = 'person';
+      updateSelectedBoxLabel(selectBoxLabel);
+      break;
+    case 72: // 'h' for head
+      selectPartType.value = DRAWING_HEAD;
+      updateSelectedPartType(selectPartType);
+      break;
+    case 84: // 't' for torso
+      selectPartType.value = DRAWING_TORSO;
+      updateSelectedPartType(selectPartType);
+      break;
+    case 87: // 'w' for wheels
+      selectPartType.value = DRAWING_CARWHEELS;
+      updateSelectedPartType(selectPartType);
+      break;
+  }
 }
 
 
@@ -197,7 +221,7 @@ function displayInfoPopup(popupId) {
 <body onLoad='init()' style="padding:5px;">
   <!-- two hidden fields for storing currently selected image and its json data -->
   <img id="imageContents" src="" style="display:none">
-  <textarea id="jsonContents" readonly rows="5" cols="75" style="display:none"></textarea>
+  <textarea id="jsonContents" readonly rows="5" cols="75"></textarea><!--style="display:none"-->
   <h1 style="color:green">Welcome to the Yoloapp!</h1>
   <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
   <br/>
@@ -246,7 +270,7 @@ function displayInfoPopup(popupId) {
       <br/>
       <br/>
       <!-- canvas where all the action happens -->
-      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardDeleteSelectedBox()"></canvas>
+      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardShortcut()"></canvas>
       <br/>
     </td>
   </tr>
