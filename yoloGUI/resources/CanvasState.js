@@ -37,7 +37,7 @@ function CanvasState(canvas, bgImg) {
   this.selectionColor = '#CC0000';
   this.selectionWidth = 2;
   this.bboxStyle = 'rgba(127, 255, 212, .5)';
-  this.pathStyle = 'rgba(127, 0, 212, .3)';
+  this.childStyle = 'rgba(127, 0, 212, .3)';
   // interval in milliseconds between each redraw of the canvas
   this.interval = 30;
 
@@ -66,7 +66,7 @@ function CanvasState(canvas, bgImg) {
         if (isShapeAPath(myCanvState.drawing)) {
 
             if (selectedShape.parent == null) { // creating a new path for a currently selected box
-                let newPath =  new Path(myCanvState.pathStyle, myCanvState.drawing, selectedShape);
+                let newPath =  new Path(myCanvState.childStyle, myCanvState.drawing, selectedShape);
                 newPath.addPoint(mx, my);
                 //add the new shape and set it as selected
                 myCanvState.addShape(newPath);
@@ -77,6 +77,7 @@ function CanvasState(canvas, bgImg) {
                 if (selectedShape.isComplete()) { // finished drawing the path
                     myCanvState.drawing = DRAWING_NONE;
                     myCanvState.selectedShape = myCanvState.selectedShape.parent;
+                    myCanvState.canvas.dispatchEvent(new Event("drawingChildFinished"));
                     myCanvState.refreshCanvas();
                 }
             }
@@ -96,7 +97,7 @@ function CanvasState(canvas, bgImg) {
         let mx = mouse.x;
         let my = mouse.y;
 
-        let bbox = new BBox(mx, my, 0, 0, myCanvState.pathStyle, myCanvState.drawing, myCanvState.selectedShape);
+        let bbox = new BBox(mx, my, 0, 0, myCanvState.childStyle, myCanvState.drawing, myCanvState.selectedShape);
         myCanvState.addShape(bbox);
         myCanvState.selectedShape = bbox;
     }
@@ -190,6 +191,7 @@ function CanvasState(canvas, bgImg) {
     if (isShapeABBox(myCanvState.drawing)) { //finished drawing a part that's a bbox
         myCanvState.drawing = DRAWING_NONE;
         myCanvState.selectedShape = myCanvState.selectedShape.parent;
+        myCanvState.canvas.dispatchEvent(new Event("drawingChildFinished"));
         myCanvState.refreshCanvas();
     }
     myCanvState.dragging = false;
@@ -301,6 +303,12 @@ CanvasState.prototype.drawBgImage = function() {
   this.ctx.drawImage(img,0,0);
 }
 
+CanvasState.prototype.setDrawing = function(selectPartType) {
+    if (this.selectedShape && this.selectedShape.parent==null)
+        this.drawing = selectPartType;
+//    else
+//        alert("Please select a bounding box to add a part.");
+}
 
 CanvasState.prototype.refreshCanvas = function() {
 
@@ -311,19 +319,33 @@ CanvasState.prototype.refreshCanvas = function() {
 
 CanvasState.prototype.deleteSelectedShape = function() {
 
+  if (!this.selectedShape) {
+    alert("Please select a shape to delete.");
+    return;
+  }
+
   let selectedShape = this.selectedShape;
 
-  for (i=0; i<this.shapes.length; i++) {
+  for (let i=0; i<this.shapes.length; i++) {
 
      if (this.shapes[i] == selectedShape) {
     	this.shapes.splice(i,1);
     	i--;
      }
+     // delete any shapes which are children of the currently selected shape
      else if (this.shapes[i].parent == selectedShape) {
         this.shapes.splice(i,1);
         i--;
      }
   }
+
+  if (selectedShape.parent != null) {
+     // remove the occurrence of selectedShape in the parent's children array
+     for (let i=0; i<selectedShape.parent.children.length; i++)
+        if (selectedShape.parent.children[i] == selectedShape)
+            selectedShape.parent.children.splice(i,1);
+  }
+
   this.selectedShape = null;
   this.canvas.dispatchEvent(new Event('updateSelectedBox'));
   this.refreshCanvas();
@@ -342,7 +364,7 @@ CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
   this.canvas.dispatchEvent(new Event('updateSelectedBox'));
 }
 
-CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
+CanvasState.prototype.getShapesFromJsonData = function(jsonText) {
 
     let image = JSON.parse(jsonText).image;
     let boxes = image.boxes;
@@ -351,7 +373,7 @@ CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
       // disable listening to canvas changes while we are using the json content to update the canvas
       this.canvas.removeEventListener('updateCanvas', updateJsonFromCanvas, true);
 
-      // the ratio of size between the working vs. original image (opposite to updateJsonFromCanvas)
+      // the ratio of size between the working vs. original image (opposite to getJsonDataFromCanvas)
       let wRatio = this.bgImg.width / image.width;
       let hRatio = this.bgImg.height / image.height;
 
@@ -372,10 +394,10 @@ CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
               let part = box.parts[j];
               let label = part.label;
               if (part.points) { // part is a Path
-                let path = new Path(this.pathStyle, label, bbox);
+                let path = new Path(this.childStyle, label, bbox);
                 for (let k=0; k<part.points.length; k++) {
                   point = part.points[k];
-                  path.addPoint(point.x * wRatio, point.y * hRatio);
+                  path.addPoint(Math.round(point.x * wRatio), Math.round(point.y * hRatio));
                 }
                 this.addShape(path);
               }
@@ -384,7 +406,7 @@ CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
                 let y = Math.round(part.topleft.y * hRatio);
                 let w = Math.round(part.bottomright.x * wRatio - x);
                 let h = Math.round(part.bottomright.y * hRatio - y);
-                let child_bbox = new BBox(x, y, w, h, this.bboxStyle, label, bbox);
+                let child_bbox = new BBox(x, y, w, h, this.childStyle, label, bbox);
                 this.addShape(child_bbox);
               }
             }
@@ -396,35 +418,36 @@ CanvasState.prototype.drawBoxesFromJson = function(jsonText) {
 }
 
 
-CanvasState.prototype.updateJsonFromCanvas = function(jsonText) {
+CanvasState.prototype.getJsonDataFromCanvas = function(jsonText) {
 
     if (jsonText == null || jsonText == "") {
         //alert("This image does not have any box data! Any changes will NOT be saved. Please contact your project manager.")
         return;
     }
 
-    let data = JSON.parse(jsonText);
-    let image = data.image
-    let shapes = myCanvState.shapes;
+    var data = JSON.parse(jsonText);
+    var image = data.image
     image.boxes = [];
 
-    // the ratio of size between the working vs. original image (opposite to drawBoxesFromJson)
+    var shapes = myCanvState.shapes;
+    // the ratio of size between the working vs. original image (opposite to getShapesFromJsonData)
     let wRatio = image.width / myCanvState.bgImg.width;;
     let hRatio = image.height / myCanvState.bgImg.height;
-
+    let boxCount = 0;
     // fill in the new shapes in the json data
     for (let i=0; i<shapes.length; i++) {
 
       var shape = shapes[i];
       if (shape.parent == null) { // a bounding box
-        image.boxes[i] = {};
-        let box = image.boxes[i];
+        image.boxes[boxCount] = {};
+        var box = image.boxes[boxCount];
+        boxCount++;
         box.label = shape.label;
         box.confidence = 1;
-        box.topleft = {}
+        box.topleft = {};
         box.topleft.x = Math.round(shape.x * wRatio);
         box.topleft.y = Math.round(shape.y * hRatio);
-        box.bottomright = {}
+        box.bottomright = {};
         box.bottomright.x = Math.round((shape.x + shape.w) * wRatio);
         box.bottomright.y = Math.round((shape.y + shape.h) * hRatio);
 
@@ -432,24 +455,24 @@ CanvasState.prototype.updateJsonFromCanvas = function(jsonText) {
             box.parts = [];
             for (let j=0; j<shape.children.length; j++) {
                 box.parts[j] = {};
-                let child = shape.children[j];
-                let part = box.parts[j];
+                var child = shape.children[j];
+                var part = box.parts[j];
                 part.label = child.label;
                 if (child instanceof BBox) {
-                    part.topleft = {}
+                    part.topleft = {};
                     part.topleft.x = Math.round(child.x * wRatio);
                     part.topleft.y = Math.round(child.y * hRatio);
-                    part.bottomright = {}
+                    part.bottomright = {};
                     part.bottomright.x = Math.round((child.x + child.w) * wRatio);
                     part.bottomright.y = Math.round((child.y + child.h) * hRatio);
                 }
                 else if (child instanceof Path) {
                     part.points = [];
                     for (let k=0; k<child.points.length; k++) {
-                        let point = child.points[k];
+                        var point = child.points[k];
                         part.points[k] = {};
-                        part.points[k].x = point.x * wRatio;
-                        part.points[k].y = point.y * hRatio;
+                        part.points[k].x = Math.round(point.x * wRatio);
+                        part.points[k].y = Math.round(point.y * hRatio);
                     }
                 }
             }

@@ -37,7 +37,7 @@ BBox.prototype.drawMe = function(ctx) {
 
   ctx.fillStyle = this.fill;
   ctx.fillRect(this.x, this.y, this.w, this.h);
-  ctx.font = "18px Arial bold";
+  ctx.font = this.parent ? "12px Arial bold" : "18px Arial bold";
   ctx.fillStyle = "black";
   ctx.fillText(this.label,this.x+5, this.y+18);
 }
@@ -140,9 +140,11 @@ BBox.prototype.dragMe = function(x, y) {
 // common to the Shape parent class
 BBox.prototype.highlightMe = function(ctx, color, lineWidth) {
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.strokeRect(this.x,this.y,this.w,this.h);
+    if (this.parent==null) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        ctx.strokeRect(this.x,this.y,this.w,this.h);
+    }
 
     //draw resize circles on the corners of selected box
     ctx.strokeStyle = 'black';

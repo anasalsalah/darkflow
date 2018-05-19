@@ -15,7 +15,7 @@ images_src_path = os.path.join(BASE_PATH, "darkflow_images_src")
 images_wrk_path = os.path.join(BASE_PATH, "darkflow_images_wrk")
 images_dst_path = os.path.join(BASE_PATH, "darkflow_images_dst")
 
-images_batch_size = 10
+images_batch_size = 8
 
 darkflow_path = "/home/yolo/PycharmProjects/darkflow"
 darkflow_cfg = "/cfg/tiny-yolo-voc.cfg"

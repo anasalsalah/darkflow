@@ -87,6 +87,9 @@ Path.prototype.drawMe = function(ctx) {
 
         ctx.fill();
     }
+    ctx.font = "12px Arial bold";
+    ctx.fillStyle = "black";
+    ctx.fillText(this.label, this.points[0].x+10, this.points[0].y+10);
 }
 
 // specific to the Path class
@@ -149,12 +152,7 @@ Path.prototype.highlightMe = function(ctx, color, lineWidth) {
         //draw point numbers
         ctx.font = "12px Arial bold";
         ctx.fillStyle = "black";
-
-        let text = (i+1).toString();
-        if (i==0) {
-            text += " " + this.label;
-        }
-        ctx.fillText(text, this.points[i].x-5, this.points[i].y-5);
+        ctx.fillText(i+1, this.points[i].x-5, this.points[i].y-5);
     }
 }
 
