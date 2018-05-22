@@ -145,9 +145,7 @@ function CanvasState(canvas, bgImg) {
         if (myCanvState.selectedShape) {
           myCanvState.dragging = false;
           myCanvState.resizing = false;
-          myCanvState.selectedShape = null;
-          myCanvState.refreshCanvas(); // Need to clear the old selectedShape border
-          myCanvState.canvas.dispatchEvent(event);
+          myCanvState.deselectShape();
         }
     }
   }, true);
@@ -208,6 +206,20 @@ function CanvasState(canvas, bgImg) {
 
   // set the timer for redrawing the canvas.
   setInterval(function() { myCanvState.draw(); }, myCanvState.interval);
+}
+
+
+CanvasState.prototype.deselectShape = function() {
+
+    if (this.selectedShape && !this.selectedShape.isComplete()) {
+        this.deleteSelectedShape()
+    }
+    else {
+        this.selectedShape = null;
+        this.drawing = DRAWING_NONE;
+        this.refreshCanvas(); // Need to clear the old selectedShape border
+        this.canvas.dispatchEvent(new Event("updateSelectedBox"));
+    }
 }
 
 
@@ -350,6 +362,7 @@ CanvasState.prototype.deleteSelectedShape = function() {
   }
 
   this.selectedShape = null;
+  this.drawing = DRAWING_NONE;
   this.canvas.dispatchEvent(new Event('updateSelectedBox'));
   this.refreshCanvas();
 }

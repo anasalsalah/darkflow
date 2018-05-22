@@ -104,7 +104,7 @@ Path.prototype.addPoint = function(mx, my) {
         this.points.push({'x':mx, 'y':my});
 }
 
-// specific to the Path class
+// common to the Shape parent class
 Path.prototype.isComplete = function() {
 
     return this.points.length == this.numOfPoints;

@@ -50,6 +50,13 @@ BBox.prototype.contains = function(mx, my) {
           (this.y <= my) && (this.y + this.h >= my);
 }
 
+
+BBox.prototype.isComplete = function() {
+
+    return true;
+}
+
+
 // common to the Shape parent class
 BBox.prototype.setResizeCorner = function(mx, my) {
 

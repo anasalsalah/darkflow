@@ -1,7 +1,13 @@
 {
   "labels": [
       {
+        "name": "Add Label",
+        "value": ""
+      },
+      {
         "name": "person",
+        "value": "person",
+
         "parts": [
           {"name": "head"},
           {"name": "torso"}
@@ -9,15 +15,18 @@
       },
       {
         "name": "car",
+        "value": "car",
         "parts": [
           {"name": "wheelsAndLicense"}
         ]
       },
       {
-        "name": "bicycle"
+        "name": "bicycle",
+        "value": "bicycle"
       },
       {
-        "name": "motorcycle"
+        "name": "motorcycle",
+        "value": "motorcycle"
       }
     ]
 }

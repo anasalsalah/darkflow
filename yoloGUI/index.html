@@ -42,6 +42,7 @@ function selectThumbnailImage(thumbIndex, imageFile, jsonFile) {
   selectedThumbImg.classList.remove("thumb-done");
   selectedThumbImg.classList.add("thumb-selected");
 
+  myCanvState.deselectShape();
   checkShowDoneButton();
 }
 
@@ -79,8 +80,10 @@ function selectPreviousImage() {
 
   setSelectedImageDone();
 
-  if (prevThumbImg!=null)
+  if (prevThumbImg!=null) {
     prevThumbImg.click();
+    myCanvState.deselectShape();
+  }
 }
 
 
@@ -93,8 +96,10 @@ function selectNextImage() {
 
   setSelectedImageDone();
 
-  if (nextThumbImg!=null)
+  if (nextThumbImg!=null) {
     nextThumbImg.click();
+    myCanvState.deselectShape();
+  }
 }
 
 
@@ -133,7 +138,7 @@ function updateSelectedPartType(selectPart) {
   switch (selectPart.value) {
 
     case DRAWING_NONE:
-      //instructions.textContent = "Double-click to create a new bounding box.";
+      instructions.textContent = "";
       break;
     case DRAWING_HEAD:
       instructions.textContent = "Click and drag to draw a box for the head.";
@@ -166,20 +171,22 @@ function displayAddPartFields(label) {
   selectPart.value = DRAWING_NONE;
 
   //check if current label has parts and populate dropdown accordingly
-  for (let i=0; i < labelData.labels.length; i++) {
-    if (labelData.labels[i].name == label && labelData.labels[i].parts) {
-        //display the Add Part dropdown
-        selectPart.style.display = "";
-        let labelParts = labelData.labels[i].parts
-        //add the parts to the dropdown
-        for(let j=0; j < labelParts.length; j++) {
-            option = document.createElement("option");
-            option.text = labelParts[j].name;
-            option.value = labelParts[j].name;
-            selectPart.add(option);
+  if (labelData && labelData.labels) {
+      for (let i=0; i < labelData.labels.length; i++) {
+        if (labelData.labels[i].name == label && labelData.labels[i].parts) {
+            //display the Add Part dropdown
+            selectPart.style.display = "";
+            let labelParts = labelData.labels[i].parts
+            //add the parts to the dropdown
+            for(let j=0; j < labelParts.length; j++) {
+                option = document.createElement("option");
+                option.text = labelParts[j].name;
+                option.value = labelParts[j].name;
+                selectPart.add(option);
+            }
+            return;
         }
-        return;
-    }
+      }
   }
   // could not find parts for selected label. hide the parts dropdown.
   selectPart.style.display = "none";
@@ -197,6 +204,9 @@ function keyboardShortcut() {
 
   switch (event.keyCode) {
 
+    case 27: // Escape key
+      myCanvState.deselectShape();
+      break;
     case 46: // Delete key
       myCanvState.deleteSelectedShape();
       break;
@@ -252,7 +262,7 @@ function displayInfoPopup(popupId) {
 <body onLoad='init()' style="padding:5px;">
   <!-- two hidden fields for storing currently selected image and its json data -->
   <img id="imageContents" src="" style="display:none">
-  <textarea id="jsonContents" readonly rows="5" cols="75"></textarea> <!-- style="display:none" -->
+  <textarea id="jsonContents" readonly rows="5" cols="75" style="display:none"></textarea> <!--  -->
   <h1 style="color:green">Welcome to the Yoloapp!</h1>
   <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
   <br/>
@@ -275,13 +285,15 @@ function displayInfoPopup(popupId) {
                      value="New Box" onclick="buttonNewBox()"/>
               <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
                      value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+              <input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
+                     value="Clear Image" onclick="myCanvState.clearShapes();"/>
               <!--Total Boxes: <span id="numOfBoxes"></span>-->
               <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
                 <img src="resources/info_icon.png" width="20" height="20"/>
                 <span class="popuptext" id="boxInfoPopup">
                   Shortcuts:<br/>
                   Double-click in image to create new bounding box.<br/>
-                  Delete key: deletes a selected shape.<br/>
+                  Delete key: deletes selected box.<br/>
                   <br/>
                   Press 'b' to set the box label to 'bicycle'.<br/>
                   Press 'c' to set the box label to 'car'.<br/>

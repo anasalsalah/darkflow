@@ -27,7 +27,7 @@ function loadLabelLists() {
         for (let i=0; i < jsonBoxLabels.length; i++) {
             let option = document.createElement("option");
             option.text = jsonBoxLabels[i].name;
-            option.value = jsonBoxLabels[i].name;
+            option.value = jsonBoxLabels[i].value;
             boxLabelSelect.add(option);
         }
         boxLabelSelect.value = "";
@@ -69,7 +69,7 @@ function updateIssue(issueId, folderId) {
         alert("Could not update the status of your work. Please contact your project manager.")
     }
     else {
-        alert("You're done here! You may now exit the browser.");
+        alert("Your issue has been updated! You may now exit the browser.");
     }
   });
 }
@@ -81,7 +81,7 @@ function postRequestToServer(url, doneCallback) {
   xhr.onreadystatechange = handleStateChange;
   xhr.open("POST", url, true);
   xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.send(); //xhr.send(jsonText);
+  xhr.send();
 
   function handleStateChange() {
     if (xhr.readyState === 4) {
@@ -96,7 +96,6 @@ function drawBoxesFromJson(jsonText) {
   myCanvState.clearShapes();
 
   if(jsonText == null || jsonText == "") {
-    //alert("The json data is empty. Cannot draw boxes.");
     return;
   }
 
@@ -109,7 +108,6 @@ function drawBoxesFromJson(jsonText) {
 
   try {
     myCanvState.getShapesFromJsonData(jsonText);
-    //document.getElementById('numOfBoxes').textContent = myCanvState.shapes.length;
   }
   catch (err){
     alert ("An error occurred while trying to draw boxes based on the json file: " + err.message
@@ -127,5 +125,4 @@ function updateJsonFromCanvas() {
     let jsonData = myCanvState.getJsonDataFromCanvas(jsonText);
     document.getElementById('jsonContents').textContent = JSON.stringify(jsonData);
   }
-  //document.getElementById('numOfBoxes').textContent = myCanvState.shapes.length;
 }
