@@ -3,12 +3,33 @@ const DRAWING_HEAD = "head";
 const DRAWING_TORSO = "torso";
 const DRAWING_CARWHEELS = "wheelsAndLicense";
 
-function isShapeAPath(shapeType) {
+function Shape() {}
+
+Shape.isPath = function (shapeType) {
 
  return (shapeType == DRAWING_CARWHEELS || shapeType == DRAWING_TORSO);
 }
 
-function isShapeABBox(shapeType) {
+Shape.isBBox = function (shapeType) {
 
  return (shapeType == DRAWING_HEAD);
+}
+
+Shape.isCarWheels = function (shapeType) {
+
+ return (shapeType == DRAWING_CARWHEELS);
+}
+
+
+Shape.getPathNumOfPoints = function (label) {
+
+    switch (label) {
+        case DRAWING_TORSO:
+            return 4;
+        case DRAWING_CARWHEELS:
+            return 5;
+        default:
+            return 4;
+    }
+
 }

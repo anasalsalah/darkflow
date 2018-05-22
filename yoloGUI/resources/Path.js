@@ -1,16 +1,7 @@
 // TODO: Path and BBox to inherit from abstract class Shape.
 function Path(fill, label, parent = null) {
 
-    switch (label) {
-        case DRAWING_TORSO:
-            this.numOfPoints = 4;
-            break;
-        case DRAWING_CARWHEELS:
-            this.numOfPoints = 5;
-            break;
-        default:
-            this.numOfPoints = 4;
-    }
+    this.numOfPoints = Shape.getPathNumOfPoints(label);
 
     this.fill = fill || '#AAAAAA';
     this.label = label || 'label';
@@ -74,11 +65,25 @@ Path.prototype.resizeMe = function(mx, my) {
 Path.prototype.drawMe = function(ctx) {
 
     ctx.fillStyle = this.fill;
-
-    if (this.points.length == 1) {
+    if (Shape.isCarWheels(this.label)
+        && this.points.length == this.numOfPoints) { //path is car wheels + license that has been completed
+        // draw wheels as a parallelogram
+        ctx.beginPath();
+        ctx.moveTo(this.points[0].x, this.points[0].y);
+        for(let i=1; i<4; i++)
+            ctx.lineTo(this.points[i].x, this.points[i].y);
+        ctx.fill();
+        // draw license plate as a single point
+        ctx.strokeStyle = 'white';
+        ctx.fillStyle = 'blue';
+        ctx.beginPath();
+        ctx.arc(this.points[4].x, this.points[4].y, 5, 0, 2 * Math.PI);
+        ctx.fill(); ctx.stroke();
+    }
+    else if (this.points.length == 1) { // path is single point
         ctx.fillRect(this.points[0].x-2, this.points[0].y-2, 4, 4);
     }
-    else {
+    else { // multi-point path
         ctx.beginPath();
         ctx.moveTo(this.points[0].x, this.points[0].y);
 
@@ -106,22 +111,22 @@ Path.prototype.isComplete = function() {
 }
 
 // common to the Shape parent class
-Path.prototype.setWithinCanvas = function(width, height) {
+Path.prototype.setWithinBorders = function(bX, bY, width, height) {
 
-    for(let i=1; i<this.points.length; i++) {
+    for(let i=0; i<this.points.length; i++) {
 
         let point = this.points[i];
-        if (point.x < 0) {
-            this.dragMe (-point.x, 0);
+        if (point.x < bX) {
+            this.dragMe (bX-point.x, 0);
         }
-        if (point.y < 0) {
-            this.dragMe (-point.x, 0);
+        if (point.y < bY) {
+            this.dragMe (0, bY-point.y);
         }
-        if (point.x > width) {
-            this.dragMe (0, width - point.x);
+        if (point.x > (bX + width)) {
+            this.dragMe (bX + width - point.x, 0);
         }
-        if (point.y > height) {
-            this.dragMe (0, height - point.y);
+        if (point.y > bY + height) {
+            this.dragMe (0, bY + height - point.y);
         }
     }
 }
@@ -218,7 +223,11 @@ function doIntersect(p1, q1, p2, q2)
 // Returns true if the point p lies inside the polygon[] with n vertices
 function isInside(polygon, p)
 {
-    let n = polygon.numOfPoints;
+    let n = 0;
+    if (Shape.isCarWheels(polygon.label)) //discount license plate from polygon
+        n = polygon.numOfPoints -1;
+    else
+        n = polygon.numOfPoints;
     // There must be at least 3 vertices in polygon[]
     if (n < 3)  return false;
 

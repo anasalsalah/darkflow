@@ -63,9 +63,9 @@ function CanvasState(canvas, bgImg) {
         let my = mouse.y;
         let selectedShape = myCanvState.selectedShape;
 
-        if (isShapeAPath(myCanvState.drawing)) {
+        if (Shape.isPath(myCanvState.drawing)) {
 
-            if (selectedShape.parent == null) { // creating a new path for a currently selected box
+            if (selectedShape.parent == null) { // creating new path for currently selected parent bbox
                 let newPath =  new Path(myCanvState.childStyle, myCanvState.drawing, selectedShape);
                 newPath.addPoint(mx, my);
                 //add the new shape and set it as selected
@@ -88,10 +88,10 @@ function CanvasState(canvas, bgImg) {
   // Up, down, and move are for dragging or resizing or adding a part that's a bbox
   canvas.addEventListener('mousedown', function(e) {
 
-    if (isShapeAPath(myCanvState.drawing)) // a path is still being drawn
+    if (Shape.isPath(myCanvState.drawing)) // a path is still being drawn
         return;
 
-    if (isShapeABBox(myCanvState.drawing)) { // a part that's a bbox is getting created
+    if (Shape.isBBox(myCanvState.drawing)) { // a part that's a bbox is getting created
 
         let mouse = myCanvState.getMouse(e);
         let mx = mouse.x;
@@ -155,11 +155,11 @@ function CanvasState(canvas, bgImg) {
 
   canvas.addEventListener('mousemove', function(e) {
 
-    if (isShapeAPath(myCanvState.drawing)
+    if (Shape.isPath(myCanvState.drawing)
             && myCanvState.selectedShape.parent != null) { //currently drawing a part that's a path
       myCanvState.refreshCanvas();
     }
-    else if (isShapeABBox(myCanvState.drawing)
+    else if (Shape.isBBox(myCanvState.drawing)
                 && myCanvState.selectedShape.parent != null) { //currently dragging a part that's a bbox
 
         let mouse = myCanvState.getMouse(e);
@@ -188,7 +188,7 @@ function CanvasState(canvas, bgImg) {
 
   canvas.addEventListener('mouseup', function(e) {
 
-    if (isShapeABBox(myCanvState.drawing)) { //finished drawing a part that's a bbox
+    if (Shape.isBBox(myCanvState.drawing)) { //finished drawing a part that's a bbox
         myCanvState.drawing = DRAWING_NONE;
         myCanvState.selectedShape = myCanvState.selectedShape.parent;
         myCanvState.canvas.dispatchEvent(new Event("drawingChildFinished"));
@@ -251,7 +251,12 @@ CanvasState.prototype.draw = function() {
       let shape = shapes[i];
 
       // Limit shapes to fall within canvas. Do not allow moving off screen.
-      shape.setWithinCanvas(this.canvas.width, this.canvas.height);
+      if (shape.parent == null)
+        shape.setWithinBorders(0, 0, this.canvas.width, this.canvas.height);
+      else {
+        let parent = shape.parent;
+        shape.setWithinBorders(parent.x, parent.y, parent.w, parent.h)
+      }
       shape.drawMe(ctx);
       if (shape == this.selectedShape)
         shape.highlightMe(ctx, this.selectionColor, this.selectionWidth);
@@ -306,8 +311,6 @@ CanvasState.prototype.drawBgImage = function() {
 CanvasState.prototype.setDrawing = function(selectPartType) {
     if (this.selectedShape && this.selectedShape.parent==null)
         this.drawing = selectPartType;
-//    else
-//        alert("Please select a bounding box to add a part.");
 }
 
 CanvasState.prototype.refreshCanvas = function() {
@@ -438,7 +441,7 @@ CanvasState.prototype.getJsonDataFromCanvas = function(jsonText) {
     for (let i=0; i<shapes.length; i++) {
 
       var shape = shapes[i];
-      if (shape.parent == null) { // a bounding box
+      if (shape.parent == null) { // a parent bounding box
         image.boxes[boxCount] = {};
         var box = image.boxes[boxCount];
         boxCount++;
@@ -451,7 +454,7 @@ CanvasState.prototype.getJsonDataFromCanvas = function(jsonText) {
         box.bottomright.x = Math.round((shape.x + shape.w) * wRatio);
         box.bottomright.y = Math.round((shape.y + shape.h) * hRatio);
 
-        if (shape.children.length > 0) { // bounding box has parts
+        if (shape.children.length > 0) { // parent bbox has parts
             box.parts = [];
             for (let j=0; j<shape.children.length; j++) {
                 box.parts[j] = {};

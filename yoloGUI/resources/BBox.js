@@ -111,22 +111,28 @@ BBox.prototype.resizeMe = function(mx, my) {
     this.y = newY;
     this.w = newW;
     this.h = newH;
+
+    // prevent w and h from having negative values
+    if (this.w < 0)
+        this.w = 20;
+    if (this.h < 0)
+        this.h = 20;
 }
 
 // common to the Shape parent class
-BBox.prototype.setWithinCanvas = function(width, height) {
+BBox.prototype.setWithinBorders = function(bX, bY, width, height) {
 
-  if (this.x < 0) {
-    this.x = 0;
+  if (this.x < bX) {
+    this.x = bX;
   }
-  if (this.y < 0) {
-    this.y = 0;
+  if (this.y < bY) {
+    this.y = bY;
   }
-  if (this.x + this.w > width) {
-    this.x = width - this.w;
+  if (this.x + this.w > bX + width) {
+    this.x = bX + width - this.w;
   }
-  if (this.y + this.h > height) {
-    this.y = height - this.h;
+  if (this.y + this.h > bY + height) {
+    this.y = bY + height - this.h;
   }
 }
 
