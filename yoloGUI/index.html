@@ -151,6 +151,9 @@ function updateSelectedPartInstructions(selectPart) {
     case PART_WHEELS_LICENSE:
       instructions.textContent = "Click 5 times on the image in this order: front-left wheel, front-right, back-right, back-left, and finally the front license plate."
       break;
+    case PART_TWO_WHEELS:
+      instructions.textContent = "Click 2 times on the image in this order: front wheel, back wheel."
+      break;
   }
 }
 
@@ -319,7 +322,6 @@ function displayInfoPopup(popupId) {
                       label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
               <select id="selectPartType" name="selectPartType"  style="padding:3px; display:none;"
                       label="Part Type" value="Add Part" onchange="updateSelectedPartInstructions(this)"></select>
-              <span id="partInstructions" style="color: green;"></span>
             </div>
         </div>
       <!-- navigation buttons -->
@@ -330,6 +332,8 @@ function displayInfoPopup(popupId) {
       <input type="button" style="display:none" id="doneButton" name="doneButton"
              value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
       <br/>
+      <br/>
+      <span id="partInstructions" style="font:22px Arial;font-weight: bold; color: green;"></span>
       <br/>
       <!-- canvas where all the action happens -->
       <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1'></canvas>

@@ -10,6 +10,10 @@ const PART_TORSO = "torso";
 const PART_WHEELS_LICENSE = "wheelsAndLicense";
 const PART_TWO_WHEELS = "twoWheels";
 
+const OBJECT_STYLE_FONT = "18px Arial bold";
+const PART_STYLE_FONT = "14px Arial bold";
+
+const CORNER_SIZE_PIXELS = 6;
 
 function Shape() {}
 

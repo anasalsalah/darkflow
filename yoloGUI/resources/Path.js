@@ -26,8 +26,8 @@ Path.prototype.contains = function(mx, my) {
 Path.prototype.setResizeCorner = function(mx, my) {
 
     for (let i=0; i<this.points.length; i++) {
-        if (this.points[i].x-5 < mx && mx < this.points[i].x+5
-            && this.points[i].y-5 < my && my < this.points[i].y+5) {
+        if (this.points[i].x-CORNER_SIZE_PIXELS < mx && mx < this.points[i].x+CORNER_SIZE_PIXELS
+            && this.points[i].y-CORNER_SIZE_PIXELS < my && my < this.points[i].y+CORNER_SIZE_PIXELS) {
             this.resizeCorner = i;
             return;
         }
@@ -40,6 +40,8 @@ Path.prototype.resizeMe = function(mx, my) {
 
     this.points[this.resizeCorner].x = mx;
     this.points[this.resizeCorner].y = my;
+
+    this.setWithinBorders(0, 0, 0, 0, false);
 }
 
 
@@ -59,7 +61,7 @@ Path.prototype.drawMe = function(ctx) {
         ctx.strokeStyle = 'white';
         ctx.fillStyle = 'blue';
         ctx.beginPath();
-        ctx.arc(this.points[4].x, this.points[4].y, 5, 0, 2 * Math.PI);
+        ctx.arc(this.points[4].x, this.points[4].y, CORNER_SIZE_PIXELS, 0, 2 * Math.PI);
         ctx.fill(); ctx.stroke();
     }
     else {
@@ -77,15 +79,20 @@ Path.prototype.drawMe = function(ctx) {
         }
         else if (this.points.length == 2) { // path is a line
             ctx.strokeStyle = 'black';
-            // TODO: draw circles on the end points of the line even if not selected
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(this.points[0].x, this.points[0].y);
             ctx.lineTo(this.points[1].x, this.points[1].y);
-            ctx.fill(); ctx.stroke();
+            ctx.stroke();
+
+            ctx.fillStyle = 'black';
+            //draw circles on the endpoints of a line even if not selected
+            ctx.fillRect(this.points[0].x-2, this.points[0].y-2, 4, 4);
+            ctx.fillRect(this.points[1].x-2, this.points[1].y-2, 4, 4);
         }
     }
 
-    ctx.font = "12px Arial bold";
+    ctx.font = PART_STYLE_FONT;
     ctx.fillStyle = "black";
     ctx.fillText(this.label, this.points[0].x+10, this.points[0].y+10);
 }
@@ -104,23 +111,28 @@ Path.prototype.isComplete = function() {
 }
 
 // common to the Shape parent class
-Path.prototype.setWithinBorders = function(bX, bY, width, height) {
+Path.prototype.setWithinBorders = function(bX, bY, width, height, drag=true) {
+
+    if (this.parent != null) {
+        // limit parts to fall within their parent boxes.
+        let parent = this.parent;
+        bX = parent.x;
+        bY = parent.y;
+        width = parent.w;
+        height = parent.h;
+    }
 
     for(let i=0; i<this.points.length; i++) {
 
         let point = this.points[i];
-        if (point.x < bX) {
-            this.dragMe (bX-point.x, 0);
-        }
-        if (point.y < bY) {
-            this.dragMe (0, bY-point.y);
-        }
-        if (point.x > (bX + width)) {
-            this.dragMe (bX + width - point.x, 0);
-        }
-        if (point.y > bY + height) {
-            this.dragMe (0, bY + height - point.y);
-        }
+        if (point.x < bX)
+            if (drag) this.dragMe(bX-point.x, 0);  else point.x = bX;
+        if (point.y < bY)
+            if (drag) this.dragMe (0, bY-point.y);  else  point.y = bY;
+        if (point.x > (bX + width))
+            if (drag) this.dragMe (bX + width - point.x, 0);  else  point.x = bX + width;
+        if (point.y > bY + height)
+            if (drag) this.dragMe (0, bY + height - point.y);  else point.y = bY + height;
     }
 }
 
@@ -136,8 +148,9 @@ Path.prototype.dragMe = function(x, y) {
 // common to the Shape parent class
 Path.prototype.highlightMe = function(ctx, color, lineWidth) {
 
-    //ctx.strokeStyle = color;
-    //ctx.lineWidth = lineWidth;
+    ctx.fillStyle = this.fill;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
 
     for(let i=0; i<this.points.length; i++) {
 
@@ -145,12 +158,12 @@ Path.prototype.highlightMe = function(ctx, color, lineWidth) {
         ctx.fillStyle = 'white';
         //draw resize circles on the corners of selected box
         ctx.beginPath();
-        ctx.arc(this.points[i].x, this.points[i].y, 5, 0, 2 * Math.PI);
+        ctx.arc(this.points[i].x, this.points[i].y, CORNER_SIZE_PIXELS, 0, 2 * Math.PI);
         ctx.fill(); ctx.stroke();
         //draw point numbers
-        ctx.font = "12px Arial bold";
+        ctx.font = PART_STYLE_FONT;
         ctx.fillStyle = "black";
-        ctx.fillText(i+1, this.points[i].x-5, this.points[i].y-5);
+        ctx.fillText(i+1, this.points[i].x-CORNER_SIZE_PIXELS-2, this.points[i].y-CORNER_SIZE_PIXELS-2);
     }
 }
 

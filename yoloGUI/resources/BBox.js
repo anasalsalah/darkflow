@@ -28,9 +28,9 @@ BBox.prototype.drawMe = function(ctx) {
 
   ctx.fillStyle = this.fill;
   ctx.fillRect(this.x, this.y, this.w, this.h);
-  ctx.font = this.parent ? "12px Arial bold" : "18px Arial bold";
+  ctx.font = this.parent ? PART_STYLE_FONT : OBJECT_STYLE_FONT;
   ctx.fillStyle = "black";
-  ctx.fillText(this.label,this.x+5, this.y+18);
+  ctx.fillText(this.label,this.x+CORNER_SIZE_PIXELS, this.y+18);
 }
 
 // common to the Shape parent class
@@ -52,19 +52,23 @@ BBox.prototype.isComplete = function() {
 BBox.prototype.setResizeCorner = function(mx, my) {
 
   // check for topleft corner
-  if (this.x-5 < mx && mx < this.x+5 && this.y-5 < my && my < this.y+5) {
+  if (this.x-CORNER_SIZE_PIXELS < mx && mx < this.x+CORNER_SIZE_PIXELS
+        && this.y-CORNER_SIZE_PIXELS < my && my < this.y+CORNER_SIZE_PIXELS) {
     this.resizeCorner = TOP_LEFT;
   }
   // check for topright corner
-  else if (this.x+this.w-5 < mx && mx < this.x+this.w+5 && this.y-5 < my && my < this.y+5) {
+  else if (this.x+this.w-CORNER_SIZE_PIXELS < mx && mx < this.x+this.w+CORNER_SIZE_PIXELS
+            && this.y-CORNER_SIZE_PIXELS < my && my < this.y+CORNER_SIZE_PIXELS) {
 	this.resizeCorner = TOP_RIGHT;
   }
   // check for bottomright corner
-  else if (this.x+this.w-5 < mx && mx < this.x+this.w+5 && this.y+this.h-5 < my && my < this.y+this.h+5) {
+  else if (this.x+this.w-CORNER_SIZE_PIXELS < mx && mx < this.x+this.w+CORNER_SIZE_PIXELS
+            && this.y+this.h-CORNER_SIZE_PIXELS < my && my < this.y+this.h+CORNER_SIZE_PIXELS) {
 	this.resizeCorner = BOTTOM_RIGHT;
   }
   // check for bottomleft corner
-  else if (this.x-5 < mx && mx < this.x+5 && this.y+this.h-5 < my && my < this.y+this.h+5) {
+  else if (this.x-CORNER_SIZE_PIXELS < mx && mx < this.x+CORNER_SIZE_PIXELS
+            && this.y+this.h-CORNER_SIZE_PIXELS < my && my < this.y+this.h+CORNER_SIZE_PIXELS) {
 	this.resizeCorner = BOTTOM_LEFT;
   }
   else {
@@ -115,23 +119,31 @@ BBox.prototype.resizeMe = function(mx, my) {
         this.w = 20;
     if (this.h < 0)
         this.h = 20;
+
+    // TODO: set within borders of parent when resizing a part bbox
+    //this.setWithinBorders(0, 0, 0, 0, false);
 }
 
 // common to the Shape parent class
-BBox.prototype.setWithinBorders = function(bX, bY, width, height) {
+BBox.prototype.setWithinBorders = function(bX, bY, width, height, drag=true) {
 
-  if (this.x < bX) {
+  if (this.parent != null) {
+    // limit parts to fall within their parent boxes.
+    let parent = this.parent;
+    bX = parent.x;
+    bY = parent.y;
+    width = parent.w;
+    height = parent.h;
+  }
+
+  if (this.x < bX)
     this.x = bX;
-  }
-  if (this.y < bY) {
+  if (this.y < bY)
     this.y = bY;
-  }
-  if (this.x + this.w > bX + width) {
+  if (this.x + this.w > bX + width)
     this.x = bX + width - this.w;
-  }
-  if (this.y + this.h > bY + height) {
+  if (this.y + this.h > bY + height)
     this.y = bY + height - this.h;
-  }
 }
 
 // common to the Shape parent class
@@ -154,15 +166,15 @@ BBox.prototype.highlightMe = function(ctx, color, lineWidth) {
     ctx.strokeStyle = 'black';
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
+    ctx.arc(this.x, this.y, CORNER_SIZE_PIXELS, 0, 2 * Math.PI);
     ctx.fill(); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(this.x + this.w, this.y, 5, 0, 2 * Math.PI);
+    ctx.arc(this.x + this.w, this.y, CORNER_SIZE_PIXELS, 0, 2 * Math.PI);
     ctx.fill(); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(this.x + this.w, this.y + this.h, 5, 0, 2 * Math.PI);
+    ctx.arc(this.x + this.w, this.y + this.h, CORNER_SIZE_PIXELS, 0, 2 * Math.PI);
     ctx.fill(); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(this.x, this.y + this.h, 5, 0, 2 * Math.PI);
+    ctx.arc(this.x, this.y + this.h, CORNER_SIZE_PIXELS, 0, 2 * Math.PI);
     ctx.fill(); ctx.stroke();
 }

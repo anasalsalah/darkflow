@@ -153,34 +153,55 @@ function CanvasState(canvas, bgImg) {
 
   canvas.addEventListener('mousemove', function(e) {
 
-    if (Shape.isPath(myCanvState.drawing)
-            && myCanvState.selectedShape.parent != null) {
-      // drawing a part that's a path
-      myCanvState.refreshCanvas();
+    if (Shape.isPath(myCanvState.drawing)) {
+        // drawing a part that's a path
+        document.body.style.cursor = "crosshair";
+        if (myCanvState.selectedShape.parent != null)
+            myCanvState.refreshCanvas();
     }
-    else if (Shape.isBBox(myCanvState.drawing)
-                && myCanvState.selectedShape.parent != null) {
+    else if (Shape.isBBox(myCanvState.drawing)) {
         // drawing a part that's a bbox
+        document.body.style.cursor = "crosshair";
+        if (myCanvState.selectedShape.parent != null) {
+            let mouse = myCanvState.getMouse(e);
+            myCanvState.selectedShape.resizeCorner = BOTTOM_RIGHT;
+            myCanvState.selectedShape.resizeMe(mouse.x, mouse.y);
+            myCanvState.refreshCanvas();
+        }
+    }
+    else if (myCanvState.resizing) {
+        document.body.style.cursor = "col-resize";
         let mouse = myCanvState.getMouse(e);
-        myCanvState.selectedShape.resizeCorner = BOTTOM_RIGHT;
         myCanvState.selectedShape.resizeMe(mouse.x, mouse.y);
         myCanvState.refreshCanvas();
     }
-    else if (myCanvState.resizing) {
-
-      let mouse = myCanvState.getMouse(e);
-      myCanvState.selectedShape.resizeMe(mouse.x, mouse.y);
-      myCanvState.refreshCanvas();
-    }
     else if (myCanvState.dragging) {
-
-      let mouse = myCanvState.getMouse(e);
-      // move the shape by the number of pixels between where we started to drag and where the mouse is located.
-      myCanvState.selectedShape.dragMe(mouse.x - myCanvState.dragStartX, mouse.y - myCanvState.dragStartY);
-      // update the drag start coordinates to the current mouse location.
-      myCanvState.dragStartX = mouse.x;
-      myCanvState.dragStartY = mouse.y;
-      myCanvState.refreshCanvas();
+        document.body.style.cursor = "move";
+        let mouse = myCanvState.getMouse(e);
+        // move the shape by the number of pixels between where we started to drag and where the mouse is located.
+        myCanvState.selectedShape.dragMe(mouse.x - myCanvState.dragStartX, mouse.y - myCanvState.dragStartY);
+        // update the drag start coordinates to the current mouse location.
+        myCanvState.dragStartX = mouse.x;
+        myCanvState.dragStartY = mouse.y;
+        myCanvState.refreshCanvas();
+    }
+    else {
+        //change cursor when hovering over a corner point
+        let shapes = myCanvState.shapes;
+        let mouse = myCanvState.getMouse(e);
+        let mx = mouse.x;
+        let my = mouse.y;
+        let cursorIsOnCorner = false;
+        for (let i = shapes.length-1; i >= 0; i--) {
+          shapes[i].setResizeCorner(mx, my);
+          if (shapes[i].resizeCorner != -1) {
+            document.body.style.cursor = "crosshair";
+            cursorIsOnCorner = true;
+            break;
+          }
+        }
+        if (!cursorIsOnCorner)
+            document.body.style.cursor = "default";
     }
   }, true);
 
@@ -193,6 +214,7 @@ function CanvasState(canvas, bgImg) {
         myCanvState.canvas.dispatchEvent(new Event("drawingChildFinished"));
         myCanvState.refreshCanvas();
     }
+    document.body.style.cursor = "default";
     myCanvState.dragging = false;
     myCanvState.resizing = false;
   }, true);
@@ -222,6 +244,7 @@ CanvasState.prototype.deselectShape = function() {
         this.refreshCanvas(); // Need to clear the old selectedShape border
         this.canvas.dispatchEvent(new Event("updateSelectedBox"));
     }
+    document.body.style.cursor = "default";
 }
 
 
@@ -265,13 +288,8 @@ CanvasState.prototype.draw = function() {
       let shape = shapes[i];
 
       // limit parent boxes to fall within canvas. Do not allow moving off screen.
-      if (shape.parent == null)
-        shape.setWithinBorders(0, 0, this.canvas.width, this.canvas.height);
-      else {
-        // limit parts to fall within their parent boxes.
-        let parent = shape.parent;
-        shape.setWithinBorders(parent.x, parent.y, parent.w, parent.h)
-      }
+      shape.setWithinBorders(0, 0, this.canvas.width, this.canvas.height);
+
       shape.drawMe(ctx);
       if (shape == this.selectedShape)
         shape.highlightMe(ctx, this.selectionColor, this.selectionWidth);
