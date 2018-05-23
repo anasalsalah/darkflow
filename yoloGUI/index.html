@@ -288,53 +288,50 @@ function displayInfoPopup(popupId) {
       </div>
     </td>
     <td valign="top" style="padding:5px;">
-        <div class="panel-group">
-            <b>Edit Boxes</b>
-            <div id="boxFields" style="border:1px solid grey; padding: 5px; width: 420px;">
-              <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton"
-                     value="New Box" onclick="buttonNewBox()"/>
-              <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
-                     value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
-              <!--<input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
-                     value="Clear Image" onclick="myCanvState.clearShapes();updateJsonFromCanvas();"/>-->
-              <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
-                <img src="resources/info_icon.png" width="20" height="20"/>
-                <span class="popuptext" id="boxInfoPopup">
-                  Double-click in image to create new bounding box.<br/>
-                  Delete key: deletes selected box.<br/>
-                  Escape key: deselects selected box.<br/>
-                  <br/>
-                  Press 'b' to set the box label to 'bicycle'.<br/>
-                  Press 'c' to set the box label to 'car'.<br/>
-                  Press 'm' to set the box label to 'motorcycle'.<br/>
-                  Press 'p' to set the box label to 'person'.<br/>
-                  <br/>
-                  Press 'h' to add a 'head' to a 'person'.<br/>
-                  Press 't' to add a 'torso' to a 'person'.<br/>
-                  Press 'w' to add 'wheels and license' to a 'car'.<br/>
-                  <br/>
-                  Up arrow: navigate to the next image.<br/>
-                  Down arrow: navigate to the previous image.
-                </span>
-              </div>
-              <br/><br/>Selected Box:
-              <select id="selectBoxLabel" name="selectBoxLabel" style="padding:3px;"
-                      label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
-              <select id="selectPartType" name="selectPartType"  style="padding:3px; display:none;"
-                      label="Part Type" value="Add Part" onchange="updateSelectedPartInstructions(this)"></select>
-            </div>
+        <div id="boxFields" style="border:1px solid grey; padding: 5px; width: 420px;">
+          <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton"
+                 value="New Box" onclick="buttonNewBox()"/>
+          <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
+                 value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+          <!--<input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
+                 value="Clear Image" onclick="myCanvState.clearShapes();updateJsonFromCanvas();"/>-->
+          <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
+            <img src="resources/info_icon.png" width="20" height="20"/>
+            <span class="popuptext" id="boxInfoPopup">
+              Double-click in image to create new bounding box.<br/>
+              Delete key: deletes selected box.<br/>
+              Escape key: deselects selected box.<br/>
+              <br/>
+              Press 'b' to set the box label to 'bicycle'.<br/>
+              Press 'c' to set the box label to 'car'.<br/>
+              Press 'm' to set the box label to 'motorcycle'.<br/>
+              Press 'p' to set the box label to 'person'.<br/>
+              <br/>
+              Press 'h' to add a 'head' to a 'person'.<br/>
+              Press 't' to add a 'torso' to a 'person'.<br/>
+              Press 'w' to add 'wheels and license' to a 'car'.<br/>
+              <br/>
+              Up arrow: navigate to the next image.<br/>
+              Down arrow: navigate to the previous image.
+            </span>
+          </div>
+          <br/><br/>Selected Box:
+          <select id="selectBoxLabel" name="selectBoxLabel" style="padding:3px;"
+                  label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
+          <select id="selectPartType" name="selectPartType"  style="padding:3px; display:none;"
+                  label="Part Type" value="Add Part" onchange="updateSelectedPartInstructions(this)"></select>
         </div>
-      <!-- navigation buttons -->
-      <input type="button" style="width:125px" id="PrevImageButton" name="PrevImageButton"
-             value="Prev Image" onclick="selectPreviousImage()"/>
-      <input type="button" style="width:125px" id="NextImageButton" name="NextImageButton"
-             value="Next Image" onclick="selectNextImage()"/>
-      <input type="button" style="display:none" id="doneButton" name="doneButton"
-             value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
-      <br/>
-      <br/>
-      <span id="partInstructions" style="font:22px Arial;font-weight: bold; color: green;"></span>
-      <br/>
+        <div style="padding-bottom:5px;">
+          <span id="partInstructions" style="font:22px Arial;font-weight: bold; color: green;"></span>
+          <br/>
+          <!-- navigation buttons -->
+          <input type="button" style="width:125px" id="PrevImageButton" name="PrevImageButton"
+                 value="Prev Image" onclick="selectPreviousImage()"/>
+          <input type="button" style="width:125px" id="NextImageButton" name="NextImageButton"
+                 value="Next Image" onclick="selectNextImage()"/>
+          <input type="button" style="display:none" id="doneButton" name="doneButton"
+                 value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
+        </div>
       <!-- canvas where all the action happens -->
       <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1'></canvas>
       <br/>

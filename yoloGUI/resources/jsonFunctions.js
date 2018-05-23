@@ -102,10 +102,12 @@ function drawBoxesFromJson(jsonText) {
   if (myCanvState.bgImg.complete == false) {
     //the image has not been completely loaded.
     //wait for a split-second before trying again.
+    document.body.style.cursor = "wait";
     setTimeout(function() {drawBoxesFromJson(jsonText)}, 100);
     return;
   }
 
+  document.body.style.cursor = "default";
   try {
     myCanvState.getShapesFromJsonData(jsonText);
   }
