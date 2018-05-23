@@ -37,3 +37,8 @@ For YOLO GUI: Django 3.5, Nginx, Gunicorn
 3- Setup an FTP account and a folder for uploading images.
 
 4- Setup the YOLO GUI by modifying the settings in each of the python files under yoloGUI: yolo_admin, yolo_app, yolo_redmine, and yolo_settings.py.
+
+5- Development mode: Run the django server:
+    ```
+    django-admin runserver --pythonpath=. --settings=yolo_app
+    ```

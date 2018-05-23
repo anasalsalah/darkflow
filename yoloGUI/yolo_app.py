@@ -1,34 +1,37 @@
-# django-admin runserver --pythonpath=. --settings=yoloapp
 import sys
 import os
-sys.path.append('../')
-from yoloGUI import yolo_redmine as yolo_redmine
-from yoloGUI import yolo_settings as settings
+import logging
+
 from django.http import HttpResponse
 from django.conf.urls import url
 from django.template.loader import render_to_string
 from django.conf.urls.static import static
 
+sys.path.append('../')  # allows importing from the module this file is in
+from yoloGUI import yolo_redmine as yolo_redmine
+from yoloGUI import yolo_settings as settings
+
 
 ROOT_URLCONF = __name__
 
 DEBUG = True
-#DEBUG = False
 ALLOWED_HOSTS = ['*']
-
 SECRET_KEY = '4l0ngs3cr3tstr1ngw3lln0ts0l0ngw41tn0w1tsl0ng3n0ugh'
-TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates',
-              'DIRS': [settings.BASE_DIR]}]
-
+TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': [settings.BASE_DIR]}]
 ERROR_HEADER = '<h1 style="color:green">Welcome to the Yoloapp!</h1>'
+
+LOGGING = settings.LOGGING
+logger = logging.getLogger(__name__)
 
 
 def home(request):
+    logger.error("GET request failed: home page. Folder ID or Issue ID parameter is empty.")
     return HttpResponse(ERROR_HEADER +
-                        'Please use the URL in the issue assigned to you on gTrack.')
+                        'Please use the URL in the issue assigned to you on gTrack.', status=401)
 
 
 def get_labels(request):
+    logger.debug("GET request: list of objects and their parts.")
     file_path = os.path.join(settings.STATIC_ROOT, "labels.json")
 
     with open(file_path, 'r') as labels_file:
@@ -38,16 +41,19 @@ def get_labels(request):
 
 
 def get_json(request):
+    logger.debug("GET request start: json data for an image.")
     json_param = request.GET.get('json_file', '')
     file_path = os.path.join(settings.MEDIA_ROOT, json_param)
 
     with open(file_path, 'r') as json_file:
         json_content = json_file.read()
 
+    logger.debug("GET request success: json data for an image.")
     return HttpResponse(json_content)
 
 
 def save_json(request):
+    logger.debug("POST request start: json data for an image.")
     json_file_param = request.GET.get('json_file', '')
     json_text_param = request.GET.get('json_text', '')
 
@@ -56,40 +62,46 @@ def save_json(request):
     with open(file_path, 'w') as json_file:
         json_file.write(json_text_param)
 
+    logger.debug("POST request success: json data for an image.")
     return HttpResponse('File saved successfully.')
 
 
 def update_issue(request):
+    logger.debug("POST request start: update Redmine issue.")
     issue_id_param = request.GET.get('issue_id', '')
     folder_id_param = request.GET.get('folder_id', '')
 
     try:
         yolo_redmine.update_issue_status(int(issue_id_param), str(folder_id_param), yolo_redmine.REDMINE_STATUS_DONE)
     except (ConnectionError, TypeError) as e:
-        print("An exception occurred: " + e)
-        return HttpResponse('An error occurred while updating the issue:' + e, status_code=404)
+        logger.exception("POST request fail: update Redmine issue. Exception: " + str(e))
+        return HttpResponse('An error occurred while updating the issue:' + str(e), status=500)
 
+    logger.debug("POST request success: update Redmine issue.")
     return HttpResponse('Issue updated successfully.')
 
 
-# http://127.0.0.1:8000/folder?folder_id=1234
 def view_folder(request):
+    logger.debug("GET request start: view folder.")
     # get the folder id
     folder_id = request.GET.get('folder_id', '')
     issue_id = request.GET.get('issue_id', '')
     images_folder = os.path.join(settings.MEDIA_ROOT, folder_id)
 
     if issue_id == '' or folder_id == '':
+        logger.error("GET request failed: view folder. Folder ID or Issue ID parameter is empty.")
         return HttpResponse(ERROR_HEADER +
-                            'Unauthorized access. Please login to gTrack and access your work from there.')
+                'Unauthorized access. Please login to gTrack and access your work from there.', status=401)
     try:
         list_of_files = os.listdir(images_folder)
     except FileNotFoundError:
+        logger.error("GET request failed: view folder. Folder does not exist.")
         return HttpResponse(ERROR_HEADER +
-                            'The folder you are trying to access does not exist. Please contact your project manager.')
+                'The folder you are trying to access does not exist. Please contact your project manager.', status=404)
     if list_of_files.__len__() == 0:
+        logger.error("GET request failed: view folder. Folder is empty.")
         return HttpResponse(ERROR_HEADER +
-                            'The folder you are trying to access is empty. Please contact your project manager.')
+                'The folder you are trying to access is empty. Please contact your project manager.', status=404)
     images_array = []
     for file in list_of_files:
         file_name = os.path.splitext(os.path.basename(file))[0]

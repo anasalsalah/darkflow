@@ -1,11 +1,14 @@
 import os
 import shutil
 import glob
+import subprocess
+import sys
+from PIL import Image
+from datetime import datetime
+
+sys.path.append('../')  # allows importing from the module this file is in
 from yoloGUI import yolo_settings as settings
 from yoloGUI import yolo_redmine as yolo_redmine
-from datetime import datetime
-import subprocess
-from PIL import Image
 
 
 BASE_PATH = settings.IMAGES_ROOT
