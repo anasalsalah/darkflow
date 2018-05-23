@@ -29,7 +29,7 @@
       },
       {
         "name": "motorcycle",
-        "value": "twoWheels",
+        "value": "motorcycle",
         "parts": [
           {"name": "twoWheels"}
         ]

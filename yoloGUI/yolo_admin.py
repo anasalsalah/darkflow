@@ -15,10 +15,10 @@ IMG_SRC_PATH = os.path.join(BASE_PATH, "darkflow_images_src")
 IMG_WRK_PATH = os.path.join(BASE_PATH, "darkflow_images_wrk")
 IMG_DST_PATH = os.path.join(BASE_PATH, "darkflow_images_dst")
 
-IMG_BATCH_SIZE = 8
+IMG_BATCH_SIZE = 10
 IMG_FORMATS = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"]
 IMG_THUMB_SIZE = [100, 150]
-IMG_WORK_SIZE = [1280, 1024]
+IMG_WORK_SIZE = [1024, 768]
 
 DARKFLOW_PATH = "/home/yolo/PycharmProjects/darkflow"
 DARKFLOW_CFG = "/cfg/tiny-yolo-voc.cfg"
@@ -38,6 +38,10 @@ def start():
     # check the most recent file and check for 20-second time difference
     # to ensure that file transfer process of images has completed
     src_files = glob.glob(IMG_SRC_PATH + '/*')  # * means all, if need specific format then *.csv
+    if src_files.__len__() == 0:
+        print("the images folder is empty.")
+        return
+
     while True:
         latest_file = max(src_files, key=os.path.getmtime)
         time_file = os.path.getmtime(latest_file)
@@ -102,7 +106,7 @@ def start():
         file_ext = os.path.splitext(file)[1]
         # move the image and its associated files to the batch directory
         os.rename(os.path.join(IMG_WRK_PATH, file),
-                  os.path.join(dir_name, file_name + "_origin" + file_ext))
+                  os.path.join(dir_name, file_name + "_original" + file_ext))
         os.rename(os.path.join(IMG_WRK_PATH, file_name + "_work" + file_ext),
                   os.path.join(dir_name, file_name + "_work" + file_ext))
         os.rename(os.path.join(IMG_WRK_PATH, file_name + "_thumb" + file_ext),
@@ -127,6 +131,6 @@ def cleanup():
 
 try:
     start()
-except (ConnectionError, FileNotFoundError) as e:
+except (ConnectionError, FileNotFoundError, ValueError) as e:
     cleanup()
-    print("An exception occurred: " + e)
+    print("An exception occurred: " + str(e))

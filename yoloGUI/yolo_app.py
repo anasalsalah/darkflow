@@ -94,8 +94,9 @@ def view_folder(request):
     for file in list_of_files:
         file_name = os.path.splitext(os.path.basename(file))[0]
         file_ext = os.path.splitext(os.path.basename(file))[1]
-        if file_name.endswith("_origin"):
-            file_name = file_name.split("_origin")[0]
+        # TODO: if the image is uploaded with file name ending with "_original", the image does not display in the GUI.
+        if file_name.endswith("_original"):
+            file_name = file_name.split("_original")[0]
 
             images_array.append(WorkImage(settings.MEDIA_URL + folder_id + "/" + file_name + "_work" + file_ext,
                                           settings.MEDIA_URL + folder_id + "/" + file_name + "_thumb" + file_ext,

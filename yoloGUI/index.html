@@ -125,12 +125,14 @@ function updateSelectedBoxLabel(selectLabel) {
   displayAddPartFields(selectLabel.value);
 }
 
+
 function resetSelectPartType() {
     document.getElementById("selectPartType").value = DRAWING_NONE;
     document.getElementById("partInstructions").textContent = "";
 }
 
-function updateSelectedPartType(selectPart) {
+
+function updateSelectedPartInstructions(selectPart) {
 
   myCanvState.setDrawing(selectPart.value);
   let instructions = document.getElementById("partInstructions");
@@ -140,18 +142,16 @@ function updateSelectedPartType(selectPart) {
     case DRAWING_NONE:
       instructions.textContent = "";
       break;
-    case DRAWING_HEAD:
+    case PART_HEAD:
       instructions.textContent = "Click and drag to draw a box for the head.";
       break;
-    case DRAWING_TORSO:
+    case PART_TORSO:
       instructions.textContent = "Click 4 times on the image in this order: left shoulder, right shoulder, right hip, left hip."
       break;
-    case DRAWING_CARWHEELS:
+    case PART_WHEELS_LICENSE:
       instructions.textContent = "Click 5 times on the image in this order: front-left wheel, front-right, back-right, back-left, and finally the front license plate."
       break;
   }
-
-
 }
 
 
@@ -190,7 +190,7 @@ function displayAddPartFields(label) {
   }
   // could not find parts for selected label. hide the parts dropdown.
   selectPart.style.display = "none";
-  updateSelectedPartType(selectPart);
+  updateSelectedPartInstructions(selectPart);
 }
 
 
@@ -204,6 +204,12 @@ function keyboardShortcut() {
 
   switch (event.keyCode) {
 
+    case 38: // Up arrow
+      selectPreviousImage();
+      break;
+    case 40: // Down arrow
+      selectNextImage();
+      break;
     case 27: // Escape key
       myCanvState.deselectShape();
       break;
@@ -211,32 +217,32 @@ function keyboardShortcut() {
       myCanvState.deleteSelectedShape();
       break;
     case 67: // 'c' for car
-      selectBoxLabel.value = 'car';
+      selectBoxLabel.value = OBJECT_CAR;
       updateSelectedBoxLabel(selectBoxLabel);
       break;
     case 80: // 'p' for person
-      selectBoxLabel.value = 'person';
+      selectBoxLabel.value = OBJECT_PERSON;
       updateSelectedBoxLabel(selectBoxLabel);
       break;
     case 66: // 'b' for bicycle
-      selectBoxLabel.value = 'bicycle';
+      selectBoxLabel.value = OBJECT_BICYCLE;
       updateSelectedBoxLabel(selectBoxLabel);
       break;
     case 77: // 'm' for motorcycle
-      selectBoxLabel.value = 'motorcycle';
+      selectBoxLabel.value = OBJECT_MOTORCYCLE;
       updateSelectedBoxLabel(selectBoxLabel);
       break;
     case 72: // 'h' for head
-      selectPartType.value = DRAWING_HEAD;
-      updateSelectedPartType(selectPartType);
+      selectPartType.value = PART_HEAD;
+      updateSelectedPartInstructions(selectPartType);
       break;
     case 84: // 't' for torso
-      selectPartType.value = DRAWING_TORSO;
-      updateSelectedPartType(selectPartType);
+      selectPartType.value = PART_TORSO;
+      updateSelectedPartInstructions(selectPartType);
       break;
     case 87: // 'w' for wheels
-      selectPartType.value = DRAWING_CARWHEELS;
-      updateSelectedPartType(selectPartType);
+      selectPartType.value = PART_WHEELS_LICENSE;
+      updateSelectedPartInstructions(selectPartType);
       break;
   }
 }
@@ -246,6 +252,7 @@ function buttonNewBox() {
 
   myCanvState.addShape(new BBox(50, 50, 50, 50, myCanvState.bboxStyle, 'New'));
 }
+
 
 function displayInfoPopup(popupId) {
 
@@ -259,7 +266,7 @@ function displayInfoPopup(popupId) {
   <link rel="stylesheet" href="resources/styles.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 </head>
-<body onLoad='init()' style="padding:5px;">
+<body onLoad='init()' style="padding:5px;" onkeyup="keyboardShortcut()">
   <!-- two hidden fields for storing currently selected image and its json data -->
   <img id="imageContents" src="" style="display:none">
   <textarea id="jsonContents" readonly rows="5" cols="75" ></textarea> <!-- style="display:none" -->
@@ -286,11 +293,10 @@ function displayInfoPopup(popupId) {
               <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
                      value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
               <!--<input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
-                     value="Clear Image" onclick="myCanvState.clearShapes();updateJsonFromCanvas(true);"/>-->
+                     value="Clear Image" onclick="myCanvState.clearShapes();updateJsonFromCanvas();"/>-->
               <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
                 <img src="resources/info_icon.png" width="20" height="20"/>
                 <span class="popuptext" id="boxInfoPopup">
-                  Shortcuts:<br/>
                   Double-click in image to create new bounding box.<br/>
                   Delete key: deletes selected box.<br/>
                   Escape key: deselects selected box.<br/>
@@ -303,14 +309,16 @@ function displayInfoPopup(popupId) {
                   Press 'h' to add a 'head' to a 'person'.<br/>
                   Press 't' to add a 'torso' to a 'person'.<br/>
                   Press 'w' to add 'wheels and license' to a 'car'.<br/>
-
+                  <br/>
+                  Up arrow: navigate to the next image.<br/>
+                  Down arrow: navigate to the previous image.
                 </span>
               </div>
               <br/><br/>Selected Box:
               <select id="selectBoxLabel" name="selectBoxLabel" style="padding:3px;"
                       label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
               <select id="selectPartType" name="selectPartType"  style="padding:3px; display:none;"
-                      label="Part Type" value="Add Part" onchange="updateSelectedPartType(this)"></select>
+                      label="Part Type" value="Add Part" onchange="updateSelectedPartInstructions(this)"></select>
               <span id="partInstructions" style="color: green;"></span>
             </div>
         </div>
@@ -324,7 +332,7 @@ function displayInfoPopup(popupId) {
       <br/>
       <br/>
       <!-- canvas where all the action happens -->
-      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1' onkeyup="keyboardShortcut()"></canvas>
+      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1'></canvas>
       <br/>
     </td>
   </tr>

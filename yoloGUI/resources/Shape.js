@@ -1,37 +1,44 @@
 const DRAWING_NONE = "none";
-const DRAWING_HEAD = "head";
-const DRAWING_TORSO = "torso";
-const DRAWING_CARWHEELS = "wheelsAndLicense";
-const DRAWING_TWOWHEELS = "twoWheels";
+
+const OBJECT_CAR = "car";
+const OBJECT_PERSON = "person";
+const OBJECT_BICYCLE = "bicycle";
+const OBJECT_MOTORCYCLE = "motorcycle";
+
+const PART_HEAD = "head";
+const PART_TORSO = "torso";
+const PART_WHEELS_LICENSE = "wheelsAndLicense";
+const PART_TWO_WHEELS = "twoWheels";
+
 
 function Shape() {}
 
 Shape.isPath = function (shapeType) {
 
- return (shapeType == DRAWING_CARWHEELS
-        || shapeType == DRAWING_TWOWHEELS
-        || shapeType == DRAWING_TORSO);
+ return (shapeType == PART_WHEELS_LICENSE
+        || shapeType == PART_TWO_WHEELS
+        || shapeType == PART_TORSO);
 }
 
 Shape.isBBox = function (shapeType) {
 
- return (shapeType == DRAWING_HEAD);
+ return (shapeType == PART_HEAD);
 }
 
 Shape.isCarWheels = function (shapeType) {
 
- return (shapeType == DRAWING_CARWHEELS);
+ return (shapeType == PART_WHEELS_LICENSE);
 }
 
 
 Shape.getPathNumOfPoints = function (label) {
 
     switch (label) {
-        case DRAWING_TWOWHEELS:
+        case PART_TWO_WHEELS:
             return 2;
-        case DRAWING_TORSO:
+        case PART_TORSO:
             return 4;
-        case DRAWING_CARWHEELS:
+        case PART_WHEELS_LICENSE:
             return 5;
         default:
             return 4;
