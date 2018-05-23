@@ -154,11 +154,11 @@ function CanvasState(canvas, bgImg) {
   canvas.addEventListener('mousemove', function(e) {
 
     if (Shape.isPath(myCanvState.drawing)
-            && myCanvState.selectedShape.parent != null) { //currently drawing a part that's a path
+            && myCanvState.selectedShape.parent != null) { // drawing a part that's a path
       myCanvState.refreshCanvas();
     }
     else if (Shape.isBBox(myCanvState.drawing)
-                && myCanvState.selectedShape.parent != null) { //currently dragging a part that's a bbox
+                && myCanvState.selectedShape.parent != null) { // drawing a part that's a bbox
 
         let mouse = myCanvState.getMouse(e);
         myCanvState.selectedShape.resizeCorner = BOTTOM_RIGHT;
@@ -212,7 +212,8 @@ function CanvasState(canvas, bgImg) {
 CanvasState.prototype.deselectShape = function() {
 
     if (this.selectedShape && !this.selectedShape.isComplete()) {
-        this.deleteSelectedShape()
+        // in the middle of drawing a part
+        this.deleteSelectedShape();
     }
     else {
         this.selectedShape = null;
@@ -262,10 +263,11 @@ CanvasState.prototype.draw = function() {
 
       let shape = shapes[i];
 
-      // Limit shapes to fall within canvas. Do not allow moving off screen.
+      // limit parent boxes to fall within canvas. Do not allow moving off screen.
       if (shape.parent == null)
         shape.setWithinBorders(0, 0, this.canvas.width, this.canvas.height);
       else {
+        // limit parts to fall within their parent boxes.
         let parent = shape.parent;
         shape.setWithinBorders(parent.x, parent.y, parent.w, parent.h)
       }
