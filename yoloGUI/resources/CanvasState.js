@@ -154,12 +154,13 @@ function CanvasState(canvas, bgImg) {
   canvas.addEventListener('mousemove', function(e) {
 
     if (Shape.isPath(myCanvState.drawing)
-            && myCanvState.selectedShape.parent != null) { // drawing a part that's a path
+            && myCanvState.selectedShape.parent != null) {
+      // drawing a part that's a path
       myCanvState.refreshCanvas();
     }
     else if (Shape.isBBox(myCanvState.drawing)
-                && myCanvState.selectedShape.parent != null) { // drawing a part that's a bbox
-
+                && myCanvState.selectedShape.parent != null) {
+        // drawing a part that's a bbox
         let mouse = myCanvState.getMouse(e);
         myCanvState.selectedShape.resizeCorner = BOTTOM_RIGHT;
         myCanvState.selectedShape.resizeMe(mouse.x, mouse.y);
@@ -212,7 +213,7 @@ function CanvasState(canvas, bgImg) {
 CanvasState.prototype.deselectShape = function() {
 
     if (this.selectedShape && !this.selectedShape.isComplete()) {
-        // in the middle of drawing a part
+        // if we're in the middle of drawing a part, delete the shape
         this.deleteSelectedShape();
     }
     else {
@@ -287,8 +288,10 @@ CanvasState.prototype.draw = function() {
 }
 
 
-// Creates an object with x and y defined, set to the mouse position relative to the state's canvas
-// If you wanna be super-correct this can be tricky, we have to worry about padding and borders
+/*
+Creates an object with x and y defined, set to the mouse position relative to the state's canvas
+If you wanna be super-correct this can be tricky, we have to worry about padding and borders
+*/
 CanvasState.prototype.getMouse = function(e) {
 
   let element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
@@ -322,10 +325,13 @@ CanvasState.prototype.drawBgImage = function() {
   this.ctx.drawImage(img,0,0);
 }
 
+
 CanvasState.prototype.setDrawing = function(selectPartType) {
+    // change the drawing state only if the selected shape is a parent bounding box
     if (this.selectedShape && this.selectedShape.parent==null)
         this.drawing = selectPartType;
 }
+
 
 CanvasState.prototype.refreshCanvas = function() {
 
@@ -382,6 +388,15 @@ CanvasState.prototype.updateSelectedBoxLabel = function(newLabel) {
   this.canvas.dispatchEvent(new Event('updateSelectedBox'));
 }
 
+
+/*
+gets all shapes from json data and adds it into canvas.
+accepts parameter jsonText, parses it into a JSON data object,
+then extracts the shapes and adds them into the canvas.
+
+parameter   jsonText    string in json format
+returns     None
+*/
 CanvasState.prototype.getShapesFromJsonData = function(jsonText) {
 
     let image = JSON.parse(jsonText).image;
@@ -435,7 +450,15 @@ CanvasState.prototype.getShapesFromJsonData = function(jsonText) {
     }
 }
 
+/*
+extracts all shapes from canvas and inserts them into a JSON data object.
+The function requires the original image data info (primarily the width
+and height), so it accepts jsonText, parses it, and uses the image object
+within to fill in the new shapes from canvas.
 
+parameter   jsonText    string containing original image data
+returns     json data object containing shapes from canvas
+*/
 CanvasState.prototype.getJsonDataFromCanvas = function(jsonText) {
 
     if (jsonText == null || jsonText == "") {

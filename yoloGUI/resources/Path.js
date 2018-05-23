@@ -14,25 +14,6 @@ function Path(fill, label, parent = null) {
       this.parent.children.push(this);
 }
 
-// common to the Shape parent class
-Path.prototype.getX = function() {
-
-    let theX = 999999;
-    for (let i=0; i<this.points.length; i++) {
-        theX = Math.min(theX, this.points[i].x);
-    }
-    return theX;
-}
-
-// common to the Shape parent class
-Path.prototype.getY = function() {
-
-    let theY = 999999;
-    for (let i=0; i<this.points.length; i++) {
-        theY = Math.min(theY, this.points[i].y);
-    }
-    return theY;
-}
 
 // common to the Shape parent class
 Path.prototype.contains = function(mx, my) {
@@ -96,7 +77,7 @@ Path.prototype.drawMe = function(ctx) {
         }
         else if (this.points.length == 2) { // path is a line
             ctx.strokeStyle = 'black';
-            //draw resize circles on the corners of selected box
+            // TODO: draw circles on the end points of the line even if not selected
             ctx.beginPath();
             ctx.moveTo(this.points[0].x, this.points[0].y);
             ctx.lineTo(this.points[1].x, this.points[1].y);

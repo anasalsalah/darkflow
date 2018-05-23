@@ -22,15 +22,6 @@ function BBox(x, y, w, h, fill, label, parent = null) {
     this.parent.children.push(this);
 }
 
-// common to the Shape parent class
-BBox.prototype.getX = function() {
-    return this.x;
-}
-
-// common to the Shape parent class
-BBox.prototype.getY = function() {
-    return this.y;
-}
 
 // common to the Shape parent class
 BBox.prototype.drawMe = function(ctx) {
@@ -50,7 +41,7 @@ BBox.prototype.contains = function(mx, my) {
           (this.y <= my) && (this.y + this.h >= my);
 }
 
-
+// common to the Shape parent class
 BBox.prototype.isComplete = function() {
 
     return true;
