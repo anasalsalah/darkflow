@@ -61,12 +61,13 @@ Path.prototype.resizeMe = function(mx, my) {
     this.points[this.resizeCorner].y = my;
 }
 
+
 // common to the Shape parent class
 Path.prototype.drawMe = function(ctx) {
 
     ctx.fillStyle = this.fill;
-    if (Shape.isCarWheels(this.label)
-        && this.points.length == this.numOfPoints) { //path is car wheels + license that has been completed
+
+    if (Shape.isCarWheels(this.label) && this.isComplete()) {
         // draw wheels as a parallelogram
         ctx.beginPath();
         ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -80,18 +81,29 @@ Path.prototype.drawMe = function(ctx) {
         ctx.arc(this.points[4].x, this.points[4].y, 5, 0, 2 * Math.PI);
         ctx.fill(); ctx.stroke();
     }
-    else if (this.points.length == 1) { // path is single point
-        ctx.fillRect(this.points[0].x-2, this.points[0].y-2, 4, 4);
-    }
-    else { // multi-point path
-        ctx.beginPath();
-        ctx.moveTo(this.points[0].x, this.points[0].y);
+    else {
+        if (this.numOfPoints > 2) { // fill in shapes
+            ctx.beginPath();
+            ctx.moveTo(this.points[0].x, this.points[0].y);
 
-        for(let i=1; i<this.points.length; i++)
-            ctx.lineTo(this.points[i].x, this.points[i].y);
+            for(let i=1; i<this.points.length; i++)
+                ctx.lineTo(this.points[i].x, this.points[i].y);
 
-        ctx.fill();
+            ctx.fill();
+        }
+        else if (this.points.length == 1) { // path is single point
+            ctx.fillRect(this.points[0].x-2, this.points[0].y-2, 4, 4);
+        }
+        else if (this.points.length == 2) { // path is a line
+            ctx.strokeStyle = 'black';
+            //draw resize circles on the corners of selected box
+            ctx.beginPath();
+            ctx.moveTo(this.points[0].x, this.points[0].y);
+            ctx.lineTo(this.points[1].x, this.points[1].y);
+            ctx.fill(); ctx.stroke();
+        }
     }
+
     ctx.font = "12px Arial bold";
     ctx.fillStyle = "black";
     ctx.fillText(this.label, this.points[0].x+10, this.points[0].y+10);

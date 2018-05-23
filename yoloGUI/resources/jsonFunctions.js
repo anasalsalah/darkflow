@@ -116,9 +116,9 @@ function drawBoxesFromJson(jsonText) {
 }
 
 
-function updateJsonFromCanvas() {
+function updateJsonFromCanvas(allowEmptyShapes=false) {
 
-  if (myCanvState.shapes && myCanvState.shapes.length>0) {
+  if (myCanvState.shapes && (allowEmptyShapes || myCanvState.shapes.length>0)) {
     // get the current json text
     let jsonText = document.getElementById('jsonContents').textContent;
     // update the json data based on whatever is drawn in canvas

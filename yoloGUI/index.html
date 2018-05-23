@@ -262,7 +262,7 @@ function displayInfoPopup(popupId) {
 <body onLoad='init()' style="padding:5px;">
   <!-- two hidden fields for storing currently selected image and its json data -->
   <img id="imageContents" src="" style="display:none">
-  <textarea id="jsonContents" readonly rows="5" cols="75" style="display:none"></textarea> <!--  -->
+  <textarea id="jsonContents" readonly rows="5" cols="75" ></textarea> <!-- style="display:none" -->
   <h1 style="color:green">Welcome to the Yoloapp!</h1>
   <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
   <br/>
@@ -285,15 +285,15 @@ function displayInfoPopup(popupId) {
                      value="New Box" onclick="buttonNewBox()"/>
               <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
                      value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
-              <input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
-                     value="Clear Image" onclick="myCanvState.clearShapes();"/>
-              <!--Total Boxes: <span id="numOfBoxes"></span>-->
+              <!--<input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
+                     value="Clear Image" onclick="myCanvState.clearShapes();updateJsonFromCanvas(true);"/>-->
               <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
                 <img src="resources/info_icon.png" width="20" height="20"/>
                 <span class="popuptext" id="boxInfoPopup">
                   Shortcuts:<br/>
                   Double-click in image to create new bounding box.<br/>
                   Delete key: deletes selected box.<br/>
+                  Escape key: deselects selected box.<br/>
                   <br/>
                   Press 'b' to set the box label to 'bicycle'.<br/>
                   Press 'c' to set the box label to 'car'.<br/>
@@ -302,7 +302,7 @@ function displayInfoPopup(popupId) {
                   <br/>
                   Press 'h' to add a 'head' to a 'person'.<br/>
                   Press 't' to add a 'torso' to a 'person'.<br/>
-                  Press 'w' to add wheels and a license to a 'car'.<br/>
+                  Press 'w' to add 'wheels and license' to a 'car'.<br/>
 
                 </span>
               </div>

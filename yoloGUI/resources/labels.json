@@ -22,11 +22,17 @@
       },
       {
         "name": "bicycle",
-        "value": "bicycle"
+        "value": "bicycle",
+        "parts": [
+          {"name": "twoWheels"}
+        ]
       },
       {
         "name": "motorcycle",
-        "value": "motorcycle"
+        "value": "twoWheels",
+        "parts": [
+          {"name": "twoWheels"}
+        ]
       }
     ]
 }
