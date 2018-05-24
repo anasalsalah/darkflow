@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<script src="../resources/Shape.js"></script>
+<script src="../resources/BBox.js"></script>
+<script src="../resources/Path.js"></script>
+<script src="../resources/CanvasState.js"></script>
+<script src="../resources/interface.js"></script>
+<script src="../resources/jsonFunctions.js"></script>
+<script>
+
+let myCanvState;
+let selectedThumbImg;
+let labelData;
+
+let imagesArrayLength = {{ images_array|length }};
+let issueId = {{ issue_id }};
+let folderId = {{ folder_id }};
+
+function init() {
+
+  loadLabelLists();
+
+  myCanvState = new CanvasState(document.getElementById('theCanvas'), document.getElementById('imageContents'));
+  myCanvState.canvas.addEventListener('updateSelectedBox', updatedSelectedBoxLabelFromCanvas, true);
+  myCanvState.canvas.addEventListener('updateCanvas', updateJsonFromCanvas, true);
+  myCanvState.canvas.addEventListener('drawingChildFinished', resetSelectPartType, true);
+  selectThumbnailImage(0, '{{ images_array.0.work_image }}','{{ images_array.0.json_file }}');
+}
+
+</script>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YOLO GUI</title>
+  <link rel="stylesheet" href="../resources/styles.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body onLoad='init()' style="padding:5px;" onkeyup="keyboardShortcut()">
+  <!-- two hidden fields for storing currently selected image and its json data -->
+  <img id="imageContents" src="" style="display:none">
+  <textarea id="jsonContents" readonly rows="5" cols="75" style="display:none"></textarea> <!--  -->
+  <h1 style="color:green">Welcome to the YOLO app!</h1>
+  <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
+  <br/>
+  <table style="padding: 5px;">
+  <tr>
+    <td valign="top" style="padding:5px;">
+      <!-- TODO: set class of image based on its status -->
+      <div class="imageScroller" style="border: 1px solid grey;">
+        {% for image in images_array %}
+            <img src="{{ image.thumb_image }}" class="thumb thumb-unselected" id="thumbImg{{ forloop.counter0 }}"
+                 onclick="selectThumbnailImage({{ forloop.counter0 }},'{{ image.work_image }}','{{ image.json_file }}')">
+        {% endfor %}
+      </div>
+    </td>
+    <td valign="top" style="padding:5px;">
+        <div id="boxFields" style="border:1px solid grey; padding: 5px; width: 420px;">
+          <input type="button" style="width:125px" id="newBoxButton" name="newBoxButton"
+                 value="New Box" onclick="buttonNewBox()"/>
+          <input type="button" style="width:125px" id="deleteBoxButton" name="deleteBoxButton"
+                 value="Delete Box" onclick="buttonDeleteSelectedBox()"/>
+          <!--<input type="button" style="width:125px" id="clearImageButton" name="clearImageButton"
+                 value="Clear Image" onclick="myCanvState.clearShapes();updateJsonFromCanvas();"/>-->
+          <div class="popup" onclick="displayInfoPopup('boxInfoPopup')">
+            <img src="../resources/info_icon.png" width="20" height="20"/>
+            <span class="popuptext" id="boxInfoPopup">
+              Double-click in image to create new bounding box.<br/>
+              Delete key: deletes selected box.<br/>
+              Escape key: deselects selected box.<br/>
+              <br/>
+              Press 'b' to set the box label to 'bicycle'.<br/>
+              Press 'c' to set the box label to 'car'.<br/>
+              Press 'm' to set the box label to 'motorcycle'.<br/>
+              Press 'p' to set the box label to 'person'.<br/>
+              <br/>
+              Press 'h' to add a 'head' to a 'person'.<br/>
+              Press 't' to add a 'torso' to a 'person'.<br/>
+              Press 'w' to add 'wheels and license' to a 'car'.<br/>
+              <br/>
+              Up arrow: navigate to the next image.<br/>
+              Down arrow: navigate to the previous image.
+            </span>
+          </div>
+          <br/><br/>Selected Box:
+          <select id="selectBoxLabel" name="selectBoxLabel" style="padding:3px;"
+                  label="Box Label" onchange="updateSelectedBoxLabel(this)"></select>
+          <select id="selectPartType" name="selectPartType"  style="padding:3px; display:none;"
+                  label="Part Type" value="Add Part" onchange="updateSelectedPartInstructions(this)"></select>
+        </div>
+        <div style="padding-bottom:5px;">
+          <span id="partInstructions" style="font:22px Arial;font-weight: bold; color: green;"></span>
+          <br/>
+          <!-- navigation buttons -->
+          <input type="button" style="width:125px" id="PrevImageButton" name="PrevImageButton"
+                 value="Prev Image" onclick="selectPreviousImage()"/>
+          <input type="button" style="width:125px" id="NextImageButton" name="NextImageButton"
+                 value="Next Image" onclick="selectNextImage()"/>
+          <input type="button" style="display:none" id="doneButton" name="doneButton"
+                 value="I'm Done!" onclick="setSelectedImageDone();updateIssue(issueId, folderId)"/>
+        </div>
+      <!-- canvas where all the action happens -->
+      <canvas id="theCanvas" style="border:3px solid #000000;" tabindex='1'></canvas>
+      <br/>
+    </td>
+  </tr>
+  </table>
+</body>
+</html>

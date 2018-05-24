@@ -81,6 +81,13 @@ def update_issue(request):
     return HttpResponse('Issue updated successfully.')
 
 
+def view_admin(request):
+    logger.debug("GET request start: view admin.")
+    html = render_to_string('pages/admin.html')
+    logger.debug("GET request success: view admin.")
+    return HttpResponse(html)
+
+
 def view_folder(request):
     logger.debug("GET request start: view folder.")
     # get the folder id
@@ -114,7 +121,7 @@ def view_folder(request):
                                           settings.MEDIA_URL + folder_id + "/" + file_name + "_thumb" + file_ext,
                                           folder_id + "/" + file_name + ".json"))
 
-    html = render_to_string('index.html', {'folder_id': folder_id,
+    html = render_to_string('pages/index.html', {'folder_id': folder_id,
                                            'issue_id': issue_id,
                                            'images_array': images_array})
     return HttpResponse(html)
@@ -122,6 +129,7 @@ def view_folder(request):
 
 urlpatterns = [
     url(r'^$', home, name='homepage'),
+    url(r'^admin$', view_admin, name='viewadmin'),
     url(r'^folder$', view_folder, name='viewfolder'),
     url(r'^get_labels$', get_labels, name='getlabels'),
     url(r'^get_json$', get_json, name='getjson'),

@@ -3,6 +3,7 @@ import shutil
 import glob
 import subprocess
 import sys
+import django.contrib.auth.hashers as hash
 from PIL import Image
 from datetime import datetime
 
@@ -18,7 +19,7 @@ IMG_SRC_PATH = os.path.join(BASE_PATH, "darkflow_images_src")
 IMG_WRK_PATH = os.path.join(BASE_PATH, "darkflow_images_wrk")
 IMG_DST_PATH = os.path.join(BASE_PATH, "darkflow_images_dst")
 
-IMG_BATCH_SIZE = 10
+# IMG_BATCH_SIZE = 10
 IMG_FORMATS = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"]
 IMG_THUMB_SIZE = [100, 150]
 IMG_WORK_SIZE = [1024, 768]
@@ -26,10 +27,23 @@ IMG_WORK_SIZE = [1024, 768]
 DARKFLOW_PATH = "/home/yolo/PycharmProjects/darkflow"
 DARKFLOW_CFG = "/cfg/tiny-yolo-voc.cfg"
 DARKFLOW_WEIGHTS = "/bin/tiny-yolo-voc.weights"
-DARKFLOW_THRESHOLD = "0.25"
+# DARKFLOW_CONFIDENCE = "0.25"
+
+# Y0L0@dmin!
+ADMIN_PASS_HASH = 'pbkdf2_sha256$100000$z0G1NqhBKsjt$mdgvu7GSvf8VmCVzkA9wT7i9IU4uvojyhtCG7ap7oGs='
 
 
-def start():
+def make_password(password):
+    hashed_pass = hash.make_password(password)
+    print(hashed_pass)
+
+
+def check_password(password):
+    match = hash.check_password(password, ADMIN_PASS_HASH)
+    print(match)
+
+
+def process_images(darkflow_confidence=0.25, img_batch_size=25):
     """
     1. copy all files from source folder to work folder.
     2. run darkflow on the work folder (creates json annotation files)
@@ -70,7 +84,7 @@ def start():
                           "--imgdir", IMG_WRK_PATH,
                           "--model", DARKFLOW_PATH + DARKFLOW_CFG,
                           "--load", DARKFLOW_PATH + DARKFLOW_WEIGHTS,
-                          "--threshold", DARKFLOW_THRESHOLD,
+                          "--threshold", str(darkflow_confidence),
                           "--json"], stdout=subprocess.PIPE)
 
     # 3. generate thumbnail and workspace versions of the images
@@ -91,14 +105,14 @@ def start():
 
             except IOError as e:
                 print("cannot create thumbnail/work images for '%s'" % file)
-                print(e)
+                print(str(e))
 
     # 4. create batches of images in folders named after timestamp
     counter = 0
     dir_name = ""
     for file in work_files:
         # create new directory for every batch of images
-        if counter % IMG_BATCH_SIZE == 0:
+        if counter % img_batch_size == 0:
             ts = str(datetime.now().timestamp()).replace(".", "-")
             dir_name = os.path.join(IMG_DST_PATH, ts)
             os.mkdir(dir_name)
@@ -124,7 +138,7 @@ def start():
         os.remove(file_path)
 
 
-def cleanup():
+def cleanup_work_folder():
     """
     removes all files in the work directory.
     """
@@ -132,8 +146,16 @@ def cleanup():
         os.remove(file)
 
 
-try:
-    start()
-except (ConnectionError, FileNotFoundError, ValueError) as e:
-    cleanup()
-    print("An exception occurred: " + str(e))
+def execute_admin_job():
+    try:
+        process_images()
+    except (ConnectionError, FileNotFoundError, ValueError) as e:
+        cleanup_work_folder()
+        print("An exception occurred: " + str(e))
+
+
+execute_admin_job()
+# from django.conf import settings
+# settings.configure()
+# make_password("Y0L0@dmin!")
+# check_password("Y0L0@dmin!")

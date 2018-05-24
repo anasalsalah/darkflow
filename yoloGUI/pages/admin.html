@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<script src="../resources/jsonFunctions.js"></script>
+<script>
+    function yoloRun() {
+
+    }
+</script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLO Admin</title>
+    <link rel="stylesheet" href="../resources/styles.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body style="padding:5px;">
+<h1 style="color:green">Welcome to the YOLO admin page.</h1>
+<br/>
+1. Upload your images to the server via FTP.<br/><br/>
+2. Make sure the FTP transfer is done.<br/><br/>
+3. Set the confidence level and image batch size:
+<br/>
+Confidence: <input id="confidenceThreshold" type="number" value="0.25" min="0.1" max="1" step="0.05" style="width:50px"/>
+Batch Size: <input id="imageBatchSize" type="number" value="25" min="10" max="250" step="5" style="width:50px"/>
+<br/><br/>
+4. If you wish, you can test YOLO's confidence threshold on an image of your choice:<br/>
+<input id="uploadTestImage" type="file" style="width:250px; display: inline;"/>
+<input id="testYoloButton" type="button" style="width:125px" value="Test!" onclick="yoloTest()"/>
+<br/><br/>
+5. If you are happy with the confidence threshold, YOLO!<br/>
+<input id="adminPassword" type="text" style="width:250px" placeholder="Admin Password"/>
+<input id="yoloButton" type="button" style="width:125px" value="YOLO!" onclick="yoloRun()"/>
+</body>
+</html>
