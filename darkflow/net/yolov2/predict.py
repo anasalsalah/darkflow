@@ -69,7 +69,7 @@ def postprocess(self, net_out, im, save_image=True, video_frame_num=0):
         cv2.putText(imgcv, mess, (left, top - 12),
                     0, 1e-3 * h, colors[max_indx], thick // 3)
 
-    out_folder = self.FLAGS.imgdir  # TODO: use path outdir set in FLAGS
+    out_folder = self.FLAGS.outdir
     img_name = os.path.join(out_folder, os.path.basename(im))
     # AAA: check if this is a single image, then check if save image
     if video_frame_num == 0:  # saving image file

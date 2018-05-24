@@ -118,8 +118,8 @@ def postprocess(self, net_out, im, save_image=True):
             0, 1e-3 * h, self.meta['colors'][max_indx],
                thick // 3)
 
-    outfolder = self.FLAGS.imgdir  # TODO: use path outdir set in FLAGS
-    img_name = os.path.join(outfolder, os.path.basename(im))
+    out_folder = self.FLAGS.outdir
+    img_name = os.path.join(out_folder, os.path.basename(im))
 
     if self.FLAGS.json:
         textJSON = json.dumps(resultsForJSON)
