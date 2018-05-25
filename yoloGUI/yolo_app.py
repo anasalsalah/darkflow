@@ -75,10 +75,9 @@ def save_json(request):
 def update_issue(request):
     logger.debug("POST request start: update Redmine issue.")
     issue_id_param = request.GET.get('issue_id', '')
-    folder_id_param = request.GET.get('folder_id', '')
 
     try:
-        yolo_redmine.update_issue_status(int(issue_id_param), str(folder_id_param), yolo_redmine.REDMINE_STATUS_DONE)
+        yolo_redmine.update_issue_status(int(issue_id_param))
     except (ConnectionError, TypeError) as e:
         logger.exception("POST request fail: update Redmine issue. Exception: " + str(e))
         return HttpResponse('An error occurred while updating the issue:' + str(e), status=500)
@@ -141,16 +140,27 @@ def view_folder(request):
         logger.error("GET request failed: view folder. Folder ID or Issue ID parameter is empty.")
         return HttpResponse(ERROR_HEADER +
                 'Unauthorized access. Please login to gTrack and access your work from there.', status=401)
+
     try:
         list_of_files = os.listdir(images_folder)
     except FileNotFoundError:
         logger.error("GET request failed: view folder. Folder does not exist.")
         return HttpResponse(ERROR_HEADER +
                 'The folder you are trying to access does not exist. Please contact your project manager.', status=404)
+
+    try:
+        issue_status_id = yolo_redmine.get_issue_status(issue_id)
+    except ConnectionError:
+        logger.error("GET request failed: Could not retrieve issue status from Redmine.")
+        return HttpResponse(ERROR_HEADER +
+                            'Could not retrieve issue status from Redmine. Please contact your project manager.',
+                            status=404)
+
     if list_of_files.__len__() == 0:
         logger.error("GET request failed: view folder. Folder is empty.")
         return HttpResponse(ERROR_HEADER +
                 'The folder you are trying to access is empty. Please contact your project manager.', status=404)
+
     images_array = []
     for file in list_of_files:
         file_name = os.path.splitext(os.path.basename(file))[0]
@@ -165,6 +175,10 @@ def view_folder(request):
 
     html = render_to_string('pages/index.html', {'folder_id': folder_id,
                                            'issue_id': issue_id,
+                                           'issue_status_id': issue_status_id,
+                                           'status_new': yolo_redmine.REDMINE_STATUS_NEW,
+                                           'status_review': yolo_redmine.REDMINE_STATUS_TO_REVIEW,
+                                           'status_complete': yolo_redmine.REDMINE_STATUS_COMPLETED,
                                            'images_array': images_array})
     return HttpResponse(html)
 

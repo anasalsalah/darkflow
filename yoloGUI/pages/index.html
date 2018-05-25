@@ -14,6 +14,7 @@ let labelData;
 let imagesArrayLength = {{ images_array|length }};
 let issueId = {{ issue_id }};
 let folderId = {{ folder_id }};
+let issueStatusId = {{ issue_status_id }};
 
 function init() {
 
@@ -40,7 +41,11 @@ function init() {
   <img id="imageContents" src="" style="display:none">
   <textarea id="jsonContents" readonly rows="5" cols="75" style="display:none"></textarea> <!--  -->
   <h1 style="color:green">Welcome to the YOLO app!</h1>
-  <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a></h3>
+  <h3>You are now working on gTrack issue #<a target="_blank" href="https://redmine.globalme.net/issues/{{ issue_id }}">{{ issue_id }}</a>
+  {% if issue_status_id == status_new %} with status: NEW. You are an Annotator! {% endif %}
+  {% if issue_status_id == status_review %} with status: TO REVIEW. You are an Reviewer! {% endif %}
+  {% if issue_status_id == status_complete %} with status: COMPLETE. Why are you still here?! {% endif %}
+  </h3>
   <br/>
   <table style="padding: 5px;">
   <tr>

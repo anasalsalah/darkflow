@@ -9,21 +9,45 @@ REQUEST_HEADER = {"Content-Type": "application/json",
 
 REDMINE_YOLO_PROJECT_ID = 354
 REDMINE_STATUS_NEW = 1
-REDMINE_STATUS_DONE = 58
+REDMINE_STATUS_TO_REVIEW = 58
+REDMINE_STATUS_COMPLETED = 73
 
 
-def update_issue_status(issue_id, folder_id, status_id):
-    # update the new issue with the URL to the yolo app, containing folder name and issue ID
-    jason_data = {"issue": {"status_id": status_id,
-                            "notes": "The status was updated successfully."}}
+def get_issue_status(issue_id):
+
+    r = requests.get(REQUEST_URL + "/issues/" + str(issue_id) + ".json",
+                     headers=REQUEST_HEADER)
+
+    if r.status_code != 200:
+        raise ConnectionError("ERROR - Getting issue status FAILED for issue ID %d: %d %s %s\n"
+                              % (issue_id, r.status_code, str(r.reason), str(r.content)))
+
+    # get the issue status from the response json data
+    json_response = json.loads(r.content.decode("utf-8"))
+    return int(json_response['issue']['status']['id'])
+
+
+def update_issue_status(issue_id):
+
+    current_status_id = get_issue_status(issue_id)
+
+    if current_status_id == REDMINE_STATUS_NEW:
+        next_status_id = REDMINE_STATUS_TO_REVIEW
+    else:
+        next_status_id = REDMINE_STATUS_COMPLETED
+
+    # update the issue with the status following the current one, according to the workflow
+    jason_data = {"issue": {"status_id": next_status_id,
+                            "notes": "The status was updated successfully from %d to %d."
+                                     % (current_status_id, next_status_id)}}
 
     r = requests.put(REQUEST_URL + "/issues/" + str(issue_id) + ".json",
                      headers=REQUEST_HEADER,
                      data=json.dumps(jason_data))
 
     if r.status_code != 200:
-        raise ConnectionError("ERROR - Updating issue status FAILED:  %s %s %s\n"
-                              % (str(r.status_code), str(r.reason), str(r.content)))
+        raise ConnectionError("ERROR - Updating issue status FAILED for issue ID %d: %d %s %s\n"
+                              % (issue_id, r.status_code, str(r.reason), str(r.content)))
 
     # return str(r.status_code), str(r.reason), str(r.content)
 
@@ -79,3 +103,6 @@ def create_issue(dir_name):
     else:
         raise ConnectionError("ERROR - Appending URL to Redmine issue FAILED: %s %s %s\n"
                               % (str(r.status_code), str(r.reason), str(r.content)))
+
+
+update_issue_status(69440)
