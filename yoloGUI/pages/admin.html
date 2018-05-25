@@ -6,6 +6,7 @@
         document.getElementById("yoloButton").disabled = true;
         document.getElementById("yoloResult").style.display = "";
         document.getElementById("yoloResult").textContent = "Waiting for response from server...";
+        document.body.style.cursor = "wait";
 
         let adminPass = document.getElementById("adminPassword").value;
         let confidence = document.getElementById("confidenceThreshold").value;
@@ -22,6 +23,7 @@
             else
                 resultTextArea.textContent = response;
 
+            document.body.style.cursor = "default";
             document.getElementById("yoloButton").disabled = false;
         });
     }
@@ -40,26 +42,20 @@
             return;
         }
         document.getElementById("testYoloButton").disabled = true;
-        document.getElementById("yoloResult").style.display = "";
-        document.getElementById("yoloResult").textContent =
-            "Uploading Image to test YOLO. Waiting for response from server...";
+        document.body.style.cursor = "wait";
+        // TODO: submit form asynchronously
+        // document.getElementById("testYoloForm").submit();
 
-        let formData = new FormData();
+        postRequestToServer("/admin_test_yolo", function(response) {
 
-        formData.append('image', imageFile, imageFile.name);
+            if (response == null || response == "")
+                alert("The YOLO server did not process the image successfully. Please contact the system administrator.");
+            else
+                document.getElementById("testResultImage").src = response + "?" + new Date().getTime();
 
-        let url = "/admin_test_yolo";
-        postRequestToServer(url, function(response) {
-            if (response == null || response == "") {
-                document.getElementById("yoloResult").textContent =
-                    "Could not retrieve a result from the server. Please contact the system administrator.";
-            }
-            else {
-                document.getElementById("yoloResult").textContent = "SUCCESS!";
-            }
             document.getElementById("testYoloButton").disabled = false;
-        }, formData);
-
+            document.body.style.cursor = "default";
+        }, new FormData(document.getElementById("testYoloForm")));
     }
 </script>
 <html lang="en">
@@ -73,20 +69,26 @@
 <h1 style="color:green">Welcome to the YOLO admin page.</h1>
 <br/>
 1. Upload your images to the server via FTP.<br/><br/>
-2. Make sure the FTP transfer is done.<br/><br/>
-3. Set the confidence level and image batch size:
+2. Make sure the FTP transfer is done before proceeding.<br/><br/>
+
+<form id="testYoloForm" method="post" action="/admin_test_yolo" enctype="multipart/form-data">
+3. Set YOLO's confidence threshold and the image batch size:
 <br/>
-Confidence: <input id="confidenceThreshold" type="number" value="0.25" min="0.1" max="1" step="0.05" style="width:50px"/>
-Batch Size: <input id="imageBatchSize" type="number" value="25" min="10" max="250" step="5" style="width:50px"/>
+Confidence: <input id="confidenceThreshold" name="confidence" type="number" value="0.25" min="0.1" max="1" step="0.05" style="width:50px"/>
+Batch Size: <input id="imageBatchSize" name="batch_size" type="number" value="25" min="10" max="250" step="5" style="width:50px"/>
 <br/><br/>
 4. If you wish, you can test YOLO's confidence threshold on an image of your choice:<br/>
-<input id="uploadTestImage" type="file" style="width:250px; display: inline;"/>
+<input id="uploadTestImage" name="image_file" type="file" style="width:250px; display: inline;"/>
 <input id="testYoloButton" type="button" style="width:125px" value="Test!" onclick="yoloTest()"/>
+</form>
+
 <br/><br/>
 5. If you are happy with the confidence threshold, YOLO!<br/>
-<input id="adminPassword" type="text" style="width:250px" placeholder="Admin Password"/>
+<input id="adminPassword" type="password" style="width:250px" placeholder="Admin Password"/>
 <input id="yoloButton" type="button" style="width:125px" value="YOLO!" onclick="yoloRun()"/>
 <br/><br/>
 <textarea id="yoloResult" readonly rows="25" cols="75" style="display:none">Response from the server will show here.</textarea>
+<br/><br/>
+<img id="testResultImage" width="1024" src="" /> <!-- {{ test_result }} -->
 </body>
 </html>

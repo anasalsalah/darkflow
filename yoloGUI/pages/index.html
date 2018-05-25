@@ -45,7 +45,6 @@ function init() {
   <table style="padding: 5px;">
   <tr>
     <td valign="top" style="padding:5px;">
-      <!-- TODO: set class of image based on its status -->
       <div class="imageScroller" style="border: 1px solid grey;">
         {% for image in images_array %}
             <img src="{{ image.thumb_image }}" class="thumb thumb-unselected" id="thumbImg{{ forloop.counter0 }}"
