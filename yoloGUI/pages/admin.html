@@ -4,6 +4,7 @@
     function yoloRun() {
 
         document.getElementById("yoloButton").disabled = true;
+        document.getElementById("testResultImage").style.display = "none";
         document.getElementById("yoloResult").style.display = "";
         document.getElementById("yoloResult").textContent = "Waiting for response from server...";
         document.body.style.cursor = "wait";
@@ -41,10 +42,11 @@
             alert("Invalid file format. File must be an image.");
             return;
         }
+
         document.getElementById("testYoloButton").disabled = true;
+        document.getElementById("yoloResult").style.display = "none";
+        document.getElementById("testResultImage").style.display = "";
         document.body.style.cursor = "wait";
-        // TODO: submit form asynchronously
-        // document.getElementById("testYoloForm").submit();
 
         postRequestToServer("/admin_test_yolo", function(response) {
 
@@ -89,6 +91,6 @@ Batch Size: <input id="imageBatchSize" name="batch_size" type="number" value="25
 <br/><br/>
 <textarea id="yoloResult" readonly rows="25" cols="75" style="display:none">Response from the server will show here.</textarea>
 <br/><br/>
-<img id="testResultImage" width="1024" src="" /> <!-- {{ test_result }} -->
+<img id="testResultImage" width="1024" src="" />
 </body>
 </html>
