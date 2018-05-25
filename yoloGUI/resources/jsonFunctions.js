@@ -81,7 +81,8 @@ function postRequestToServer(url, doneCallback, formData=null) {
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = handleStateChange;
   xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  if (formData == null)
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xhr.send(formData);
 
   function handleStateChange() {

@@ -119,9 +119,6 @@ BBox.prototype.resizeMe = function(mx, my) {
         this.w = 20;
     if (this.h < 0)
         this.h = 20;
-
-    // TODO: set within borders of parent when resizing a part bbox
-    //this.setWithinBorders(0, 0, 0, 0, false);
 }
 
 // common to the Shape parent class

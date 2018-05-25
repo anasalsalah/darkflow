@@ -3,9 +3,10 @@ import shutil
 import glob
 import subprocess
 import traceback
-from subprocess import CalledProcessError
 import sys
 import django.contrib.auth.hashers as hash
+
+from subprocess import CalledProcessError
 from PIL import Image
 from datetime import datetime
 
@@ -20,6 +21,7 @@ BASE_URL = settings.BASE_URL
 IMG_SRC_PATH = os.path.join(BASE_PATH, "darkflow_images_src")
 IMG_WRK_PATH = os.path.join(BASE_PATH, "darkflow_images_wrk")
 IMG_DST_PATH = os.path.join(BASE_PATH, "darkflow_images_dst")
+IMG_TEST_PATH = os.path.join(IMG_DST_PATH, "admin_yolo_test")
 
 # IMG_BATCH_SIZE = 10
 IMG_FORMATS = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"]
@@ -141,6 +143,7 @@ def process_images(darkflow_confidence=0.25, img_batch_size=25):
     try:
         counter = 0
         dir_name = ""
+        issues_list = []
         for file in work_files:
             # create new directory for every batch of images
             if counter % img_batch_size == 0:
@@ -149,14 +152,14 @@ def process_images(darkflow_confidence=0.25, img_batch_size=25):
                 os.mkdir(dir_name)
                 # 5. create gTrack issue for this batch
                 try:
-                    # TODO: add issue to issues_created list
                     issue_id, redmine_result = yolo_redmine.create_issue(dir_name)
+                    issues_list.append(issue_id)
                     result_message += redmine_result
                 except ConnectionError:
-                    # TODO: attempt to delete issues in issues_created from Redmine
                     result_message += "ERROR - Could not create Redmine issue for directory %s\n" % dir_name
                     result_message += "The exception was:\n%s\n" % traceback.format_exc()
                     result_message += cleanup_work_folder()
+                    result_message += yolo_redmine.delete_issues(issues_list)
                     raise YoloError(result_message)
 
             file_name = os.path.splitext(file)[0]
@@ -175,7 +178,7 @@ def process_images(darkflow_confidence=0.25, img_batch_size=25):
         result_message += "ERROR - Could not move files to batch directory for %s\n" % file
         result_message += "The exception was:\n%s\n" % traceback.format_exc()
         result_message += cleanup_work_folder()
-        # TODO: attempt to delete issues in issues_created from Redmine
+        result_message += yolo_redmine.delete_issues(issues_list)
         raise YoloError(result_message)
 
     # 6. finally, remove the list of files from the source folder
@@ -187,7 +190,7 @@ def process_images(darkflow_confidence=0.25, img_batch_size=25):
         result_message += "ERROR - Could not remove file from source folder for %s\n" % file
         result_message += "The exception was:\n%s\n" % traceback.format_exc()
         result_message += cleanup_work_folder()
-        # TODO: attempt to delete issues in issues_created from Redmine
+        result_message += yolo_redmine.delete_issues(issues_list)
         raise YoloError(result_message)
 
     return "SUCCESS - The job is complete.\n\nThe following messages were returned:\n" + result_message
@@ -205,11 +208,29 @@ def cleanup_work_folder():
         return "ERROR - could not clean up work folder:\n%s\n" % traceback.format_exc()
 
 
+def test_yolo(image_file, confidence):
+
+    # clean up test images folder
+    for file in os.listdir(IMG_TEST_PATH):
+        os.remove(os.path.join(IMG_TEST_PATH, file))
+
+    # save image to test folder
+    test_image = Image.open(image_file)
+    test_image.save(os.path.join(IMG_TEST_PATH, image_file.name))
+
+    # run yolo on test image. it should overwrite the same image with its result
+    subprocess.check_output([DARKFLOW_PATH + "/flow",
+                             "--imgdir", IMG_TEST_PATH,
+                             "--outdir", IMG_TEST_PATH,
+                             "--model", DARKFLOW_PATH + DARKFLOW_CFG,
+                             "--load", DARKFLOW_PATH + DARKFLOW_WEIGHTS,
+                             "--threshold", str(confidence),
+                             "--saveImages"], stderr=subprocess.STDOUT)
+
+
+    # return the url path to the test result
+    return "admin_yolo_test/" + image_file.name
+
+
 class YoloError(Exception):
     pass
-
-# execute_admin_job()
-# from django.conf import settings
-# settings.configure()
-# make_password("Y0L0@dmin!")
-# check_password("Y0L0@dmin!")

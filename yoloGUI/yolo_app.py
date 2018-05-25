@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.conf.urls import url
 from django.template.loader import render_to_string
 from django.conf.urls.static import static
+from django.core.files.storage import FileSystemStorage
 from PIL import Image
 
 sys.path.append('../')  # allows importing from the module this file is in
@@ -119,10 +120,14 @@ def admin_run_yolo(request):
 
 def admin_test_yolo(request):
     logger.debug("POST request start: admin test yolo.")
-    #print(request.FILES.get('image'))
-    # image = Image.open(io.BytesIO(request.POST['image'].value))
-    # image.save(os.path.join((settings.IMAGES_ROOT, request.POST['image'].fileName)))
-    return HttpResponse("OK.")
+    image_file = request.FILES['image_file']
+    confidence = float(request.POST.get('confidence', ''))
+
+    test_result = yolo_admin.test_yolo(image_file, confidence)
+
+    # html = render_to_string('pages/admin.html', {'test_result': settings.MEDIA_URL + "/" + test_result})
+    # return HttpResponse(html)
+    return HttpResponse(settings.MEDIA_URL + "/" + test_result)
 
 
 def view_folder(request):

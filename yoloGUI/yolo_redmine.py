@@ -28,6 +28,21 @@ def update_issue_status(issue_id, folder_id, status_id):
     # return str(r.status_code), str(r.reason), str(r.content)
 
 
+def delete_issues(issues_list):
+    result_message = ""
+    if issues_list.__len__() > 0:
+        result_message += "Attempting to delete Redmine issues:\n"
+        for issue_id in issues_list:
+            r = requests.delete(REQUEST_URL + "/issues/" + str(issue_id) + ".json", headers=REQUEST_HEADER)
+            if r.status_code != 200:
+                result_message += "ERROR - Failed to delete issue ID %d: %d %s %s\n"\
+                                  % (issue_id, r.status_code, str(r.reason), str(r.content))
+            else:
+                result_message += "Deleted issue ID %d\n" % issue_id
+
+    return result_message
+
+
 def create_issue(dir_name):
     # get the folder name
     dir_name = os.path.basename(dir_name)
@@ -64,4 +79,3 @@ def create_issue(dir_name):
     else:
         raise ConnectionError("ERROR - Appending URL to Redmine issue FAILED: %s %s %s\n"
                               % (str(r.status_code), str(r.reason), str(r.content)))
-
