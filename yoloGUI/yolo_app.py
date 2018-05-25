@@ -1,16 +1,19 @@
 import sys
 import os
 import logging
+import traceback
+import io
 
 from django.http import HttpResponse
 from django.conf.urls import url
 from django.template.loader import render_to_string
 from django.conf.urls.static import static
+from PIL import Image
 
 sys.path.append('../')  # allows importing from the module this file is in
 from yoloGUI import yolo_redmine as yolo_redmine
 from yoloGUI import yolo_settings as settings
-
+from yoloGUI import yolo_admin as yolo_admin
 
 ROOT_URLCONF = __name__
 
@@ -18,6 +21,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 SECRET_KEY = '4l0ngs3cr3tstr1ngw3lln0ts0l0ngw41tn0w1tsl0ng3n0ugh'
 TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': [settings.BASE_DIR]}]
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000000
+
 ERROR_HEADER = '<h1 style="color:green">Welcome to the Yoloapp!</h1>'
 
 LOGGING = settings.LOGGING
@@ -88,6 +93,38 @@ def view_admin(request):
     return HttpResponse(html)
 
 
+def admin_run_yolo(request):
+    logger.debug("GET request start: admin run yolo.")
+    password_param = request.GET.get('admin_pass', '')
+    confidence_param = request.GET.get('confidence', '')
+    batch_size_param = request.GET.get('batch_size', '')
+
+    valid_pass = yolo_admin.check_password(password_param)
+
+    if not valid_pass:
+        logger.error("invalid admin password: " + str(password_param))
+        return HttpResponse("ERROR - invalid password: " + password_param)
+
+    try:
+        confidence = float(confidence_param)
+        batch_size = int(batch_size_param)
+
+        return HttpResponse(yolo_admin.process_images(confidence, batch_size))
+
+    except yolo_admin.YoloError:
+        return HttpResponse("ERROR - Failed to process images:\n" + traceback.format_exc())
+    except (TypeError, ValueError):
+        return HttpResponse("ERROR - Invalid parameter format:\n" + traceback.format_exc())
+
+
+def admin_test_yolo(request):
+    logger.debug("POST request start: admin test yolo.")
+    #print(request.FILES.get('image'))
+    # image = Image.open(io.BytesIO(request.POST['image'].value))
+    # image.save(os.path.join((settings.IMAGES_ROOT, request.POST['image'].fileName)))
+    return HttpResponse("OK.")
+
+
 def view_folder(request):
     logger.debug("GET request start: view folder.")
     # get the folder id
@@ -130,6 +167,8 @@ def view_folder(request):
 urlpatterns = [
     url(r'^$', home, name='homepage'),
     url(r'^admin$', view_admin, name='viewadmin'),
+    url(r'^admin_run_yolo$', admin_run_yolo, name='adminrunyolo'),
+    url(r'^admin_test_yolo$', admin_test_yolo, name='admintestyolo'),
     url(r'^folder$', view_folder, name='viewfolder'),
     url(r'^get_labels$', get_labels, name='getlabels'),
     url(r'^get_json$', get_json, name='getjson'),
@@ -146,3 +185,4 @@ class WorkImage:
         self.work_image = work_image
         self.thumb_image = thumb_image
         self.json_file = json_file
+

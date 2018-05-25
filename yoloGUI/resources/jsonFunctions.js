@@ -61,27 +61,28 @@ function saveJsonFile(jsonFile, jsonText) {
   });
 }
 
+
 function updateIssue(issueId, folderId) {
 
   let url = "/update_issue?issue_id=" + issueId + "&folder_id=" + folderId;
   postRequestToServer(url, function(response) {
     if (response == null || response == "") {
-        alert("Could not update the status of your work. Please contact your project manager.")
+        alert("Could not update the status of your issue on Redmine. Please contact your project manager.")
     }
     else {
-        alert("Your issue has been updated! You may now exit the browser.");
+        alert(response);
     }
   });
 }
 
 
-function postRequestToServer(url, doneCallback) {
+function postRequestToServer(url, doneCallback, formData=null) {
 
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = handleStateChange;
   xhr.open("POST", url, true);
   xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.send();
+  xhr.send(formData);
 
   function handleStateChange() {
     if (xhr.readyState === 4) {

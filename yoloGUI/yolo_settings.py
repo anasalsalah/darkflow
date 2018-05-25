@@ -1,6 +1,5 @@
 import os
 
-# "/home/yolo/PycharmProjects/darkflow/yoloGUI/"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_URL = "http://192.168.0.63:8000"
 
@@ -26,7 +25,7 @@ LOGGING = {
             'formatter': 'standard',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.StreamHandler',
             'formatter': 'standard',
         }
@@ -38,7 +37,7 @@ LOGGING = {
             'propagate': True,
         },
         '': {
-            'handlers': ['file'],
+            'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
         },

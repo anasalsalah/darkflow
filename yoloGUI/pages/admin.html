@@ -3,6 +3,63 @@
 <script>
     function yoloRun() {
 
+        document.getElementById("yoloButton").disabled = true;
+        document.getElementById("yoloResult").style.display = "";
+        document.getElementById("yoloResult").textContent = "Waiting for response from server...";
+
+        let adminPass = document.getElementById("adminPassword").value;
+        let confidence = document.getElementById("confidenceThreshold").value;
+        let batchSize = document.getElementById("imageBatchSize").value;
+
+        let url = "/admin_run_yolo?admin_pass=" + adminPass + "&confidence=" + confidence + "&batch_size=" + batchSize;
+
+        getRequestFromServer(url, function(response) {
+
+            resultTextArea = document.getElementById("yoloResult");
+            if (response == null || response == "")
+                resultTextArea.textContent =
+                    "The YOLO server is not responding. Please contact your project manager.";
+            else
+                resultTextArea.textContent = response;
+
+            document.getElementById("yoloButton").disabled = false;
+        });
+    }
+
+    function yoloTest() {
+
+        let uploadField = document.getElementById("uploadTestImage");
+        if (!uploadField.files || uploadField.files.length == 0) {
+            alert("Please select an image to upload.");
+            return;
+        }
+
+        let imageFile = uploadField.files[0];
+        if (!imageFile.type.match('image.*')) {
+            alert("Invalid file format. File must be an image.");
+            return;
+        }
+        document.getElementById("testYoloButton").disabled = true;
+        document.getElementById("yoloResult").style.display = "";
+        document.getElementById("yoloResult").textContent =
+            "Uploading Image to test YOLO. Waiting for response from server...";
+
+        let formData = new FormData();
+
+        formData.append('image', imageFile, imageFile.name);
+
+        let url = "/admin_test_yolo";
+        postRequestToServer(url, function(response) {
+            if (response == null || response == "") {
+                document.getElementById("yoloResult").textContent =
+                    "Could not retrieve a result from the server. Please contact the system administrator.";
+            }
+            else {
+                document.getElementById("yoloResult").textContent = "SUCCESS!";
+            }
+            document.getElementById("testYoloButton").disabled = false;
+        }, formData);
+
     }
 </script>
 <html lang="en">
@@ -29,5 +86,7 @@ Batch Size: <input id="imageBatchSize" type="number" value="25" min="10" max="25
 5. If you are happy with the confidence threshold, YOLO!<br/>
 <input id="adminPassword" type="text" style="width:250px" placeholder="Admin Password"/>
 <input id="yoloButton" type="button" style="width:125px" value="YOLO!" onclick="yoloRun()"/>
+<br/><br/>
+<textarea id="yoloResult" readonly rows="25" cols="75" style="display:none">Response from the server will show here.</textarea>
 </body>
 </html>
