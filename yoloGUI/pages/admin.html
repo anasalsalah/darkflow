@@ -46,6 +46,7 @@
         document.getElementById("testYoloButton").disabled = true;
         document.getElementById("yoloResult").style.display = "none";
         document.getElementById("testResultImage").style.display = "";
+        document.getElementById("testResultImage").src = "";
         document.body.style.cursor = "wait";
 
         postRequestToServer("/admin_test_yolo", function(response) {
