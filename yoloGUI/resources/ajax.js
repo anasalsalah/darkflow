@@ -1,3 +1,40 @@
+function getRequestFromServer(url, doneCallback) {
+
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = handleStateChange;
+    xhr.open("GET", url, true);
+    xhr.send();
+
+    function handleStateChange() {
+        if (xhr.readyState === 4) {
+            doneCallback(xhr.status == 200 ? xhr.responseText : null);
+        }
+    }
+}
+
+
+function postRequestToServer(url, doneCallback, formData=null) {
+
+  let xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = handleStateChange;
+  xhr.open("POST", url, true);
+  if (formData == null)
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xhr.send(formData);
+
+  function handleStateChange() {
+    if (xhr.readyState === 4) {
+        if (xhr.status == 200) {
+            if (doneCallback != null)
+                doneCallback(xhr.responseText);
+        }
+        else
+            alert("The server encountered an error:\n" + xhr.responseText)
+      }
+  }
+}
+
+
 function loadJsonFile(jsonFile) {
 
   let url = "/get_json?json_file=" + jsonFile;
@@ -12,6 +49,7 @@ function loadJsonFile(jsonFile) {
     drawBoxesFromJson(response);
   });
 }
+
 
 function loadLabelLists() {
   let url = "/get_labels";
@@ -35,21 +73,6 @@ function loadLabelLists() {
   });
 }
 
-
-function getRequestFromServer(url, doneCallback) {
-
-    let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = handleStateChange;
-    xhr.open("GET", url, true);
-    xhr.send();
-
-    function handleStateChange() {
-        if (xhr.readyState === 4) {
-            doneCallback(xhr.status == 200 ? xhr.responseText : null);
-        }
-    }
-}
-
 // TODO: update json file status to "Done" or "Reviewed"
 function saveJsonFile(jsonFile, jsonText) {
 
@@ -64,27 +87,6 @@ function updateIssue(issueId, folderId) {
   postRequestToServer(url, function(response) {
         alert(response);
   });
-}
-
-
-function postRequestToServer(url, doneCallback, formData=null) {
-
-  let xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = handleStateChange;
-  xhr.open("POST", url, true);
-  if (formData == null)
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.send(formData);
-
-  function handleStateChange() {
-    if (xhr.readyState === 4) {
-        if (xhr.status == 200)
-            if (doneCallback != null)
-                doneCallback(xhr.responseText);
-        else
-            alert("The server encountered an error:\n" + xhr.responseText)
-      }
-  }
 }
 
 
