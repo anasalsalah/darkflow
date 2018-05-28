@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<script src="../resources/jsonFunctions.js"></script>
+<script src="../resources/ajax.js"></script>
 <script>
     function yoloRun() {
 
@@ -51,11 +51,7 @@
 
         postRequestToServer("/admin_test_yolo", function(response) {
 
-            if (response == null || response == "")
-                alert("The YOLO server did not process the image successfully. Please contact the system administrator.");
-            else
-                document.getElementById("testResultImage").src = response + "?" + new Date().getTime();
-
+            document.getElementById("testResultImage").src = response + "?" + new Date().getTime();
             document.getElementById("testYoloButton").disabled = false;
             document.body.style.cursor = "default";
         }, new FormData(document.getElementById("testYoloForm")));

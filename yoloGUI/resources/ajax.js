@@ -54,11 +54,7 @@ function getRequestFromServer(url, doneCallback) {
 function saveJsonFile(jsonFile, jsonText) {
 
   let url = "/save_json?json_file=" + jsonFile + "&json_status=" + status + "&json_text=" + jsonText;
-  postRequestToServer(url, function(response) {
-    if (response == null || response == "") {
-        alert("Could not save the json data for this image. Please contact your project manager.");
-    }
-  });
+  postRequestToServer(url, null);
 }
 
 
@@ -66,12 +62,7 @@ function updateIssue(issueId, folderId) {
 
   let url = "/update_issue?issue_id=" + issueId + "&folder_id=" + folderId;
   postRequestToServer(url, function(response) {
-    if (response == null || response == "") {
-        alert("Could not update the status of your issue on Redmine. Please contact your project manager.")
-    }
-    else {
         alert(response);
-    }
   });
 }
 
@@ -87,7 +78,11 @@ function postRequestToServer(url, doneCallback, formData=null) {
 
   function handleStateChange() {
     if (xhr.readyState === 4) {
-        doneCallback(xhr.status == 200 ? xhr.responseText : null);
+        if (xhr.status == 200)
+            if (doneCallback != null)
+                doneCallback(xhr.responseText);
+        else
+            alert("The server encountered an error:\n" + xhr.responseText)
       }
   }
 }

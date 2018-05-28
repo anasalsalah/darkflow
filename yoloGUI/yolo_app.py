@@ -2,14 +2,11 @@ import sys
 import os
 import logging
 import traceback
-import io
 
 from django.http import HttpResponse
 from django.conf.urls import url
 from django.template.loader import render_to_string
 from django.conf.urls.static import static
-from django.core.files.storage import FileSystemStorage
-from PIL import Image
 
 sys.path.append('../')  # allows importing from the module this file is in
 from yoloGUI import yolo_redmine as yolo_redmine
@@ -60,16 +57,21 @@ def get_json(request):
 
 def save_json(request):
     logger.debug("POST request start: json data for an image.")
-    json_file_param = request.GET.get('json_file', '')
-    json_text_param = request.GET.get('json_text', '')
 
-    file_path = os.path.join(settings.MEDIA_ROOT, json_file_param)
+    try:
+        json_file_param = request.GET.get('json_file', '')
+        json_text_param = request.GET.get('json_text', '')
 
-    with open(file_path, 'w') as json_file:
-        json_file.write(json_text_param)
+        file_path = os.path.join(settings.MEDIA_ROOT, json_file_param)
 
-    logger.debug("POST request success: json data for an image.")
-    return HttpResponse('File saved successfully.')
+        with open(file_path, 'w') as json_file:
+            json_file.write(json_text_param)
+
+        logger.debug("POST request success: json data for an image.")
+        return HttpResponse('File saved successfully.')
+    except EnvironmentError:
+        logger.exception("POST request fail: save json file. Exception: " + traceback.format_exc())
+        return HttpResponse('An error occurred while updating the issue:' + traceback.format_exc(), status=500)
 
 
 def update_issue(request):
@@ -78,9 +80,9 @@ def update_issue(request):
 
     try:
         yolo_redmine.update_issue_status(int(issue_id_param))
-    except (ConnectionError, TypeError) as e:
-        logger.exception("POST request fail: update Redmine issue. Exception: " + str(e))
-        return HttpResponse('An error occurred while updating the issue:' + str(e), status=500)
+    except (ConnectionError, TypeError):
+        logger.exception("POST request fail: update Redmine issue. Exception: " + traceback.format_exc())
+        return HttpResponse('An error occurred while updating the issue:' + traceback.format_exc(), status=500)
 
     logger.debug("POST request success: update Redmine issue.")
     return HttpResponse('Issue updated successfully.')
@@ -112,21 +114,22 @@ def admin_run_yolo(request):
         return HttpResponse(yolo_admin.process_images(confidence, batch_size))
 
     except yolo_admin.YoloError:
-        return HttpResponse("ERROR - Failed to process images:\n" + traceback.format_exc())
+        return HttpResponse("ERROR - Failed to process images:\n" + traceback.format_exc(), status=500)
     except (TypeError, ValueError):
-        return HttpResponse("ERROR - Invalid parameter format:\n" + traceback.format_exc())
+        return HttpResponse("ERROR - Invalid parameter format:\n" + traceback.format_exc(), status=500)
 
 
 def admin_test_yolo(request):
     logger.debug("POST request start: admin test yolo.")
-    image_file = request.FILES['image_file']
-    confidence = float(request.POST.get('confidence', ''))
 
-    test_result = yolo_admin.test_yolo(image_file, confidence)
+    try:
+        image_file = request.FILES['image_file']
+        confidence = float(request.POST.get('confidence', ''))
 
-    # html = render_to_string('pages/admin.html', {'test_result': settings.MEDIA_URL + "/" + test_result})
-    # return HttpResponse(html)
-    return HttpResponse(settings.MEDIA_URL + "/" + test_result)
+        test_result = yolo_admin.test_yolo(image_file, confidence)
+        return HttpResponse(settings.MEDIA_URL + "/" + test_result)
+    except (EnvironmentError, TypeError):
+        return HttpResponse("ERROR - Failed to process test image:\n" + traceback.format_exc(), status=500)
 
 
 def view_folder(request):
